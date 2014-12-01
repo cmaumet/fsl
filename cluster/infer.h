@@ -73,13 +73,17 @@
 
 class Infer {
 public:
-  Infer(float dLh, float t, unsigned int V);
+  Infer(float dLh, float t, unsigned int V, bool clusterthresh, bool corrthresh);
+
   void setD(int NumDim) { D = (float) NumDim; }
 
-  float operator() (unsigned int k);   // returns log(p)
+  float operator()(unsigned int k);   // returns log(p) of cluster stat
+
+  float operator()(float z);   // returns log(p) of voxel stat
 
 private:
   float Em_, B_, dLh, t, V, D;
+  bool clusterthresh, corrthresh;
 };
 
 #endif

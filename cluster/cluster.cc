@@ -113,6 +113,12 @@ Option<bool> no_table(string("--no_table"), false,
 Option<bool> minclustersize(string("--minclustersize"), false,
 		      string("prints out minimum significant cluster size"),
 		      false, no_argument);
+Option<bool> voxthresh(string("--voxthresh"), false, 
+         string("voxel-wise thresholding (corrected)"), 
+         false, no_argument);
+Option<bool> voxuncthresh(string("--voxuncthresh"), false, 
+         string("voxel-wise uncorrected thresholding"), 
+         false, no_argument);
 Option<int> voxvol(string("--volume"), 0,
 		   string("number of voxels in the mask"),
 		   false, requires_argument);
@@ -394,6 +400,8 @@ void print_results(const vector<int>& idx,
   copyconvert(copemaxpos,fcopemaxpos);
   volume<T> stdvol;
   Matrix trans;
+  bool clusterthresh;
+  
   const volume<T> *refvol = &zvol;
   if ( transformname.set() && stdvolname.set() ) {
     read_volume(stdvol,stdvolname.value());
@@ -483,7 +491,11 @@ void print_results(const vector<int>& idx,
       cerr << "Could not open file " << outlmax.value() << " for writing" << endl;
     string scalarnm=scalarname.value();
     if (scalarnm=="") { scalarnm="Value"; }
-    lmaxfile << "Cluster Index\t"+scalarnm+"\tx\ty\tz\t" << endl;
+    string pval = "";
+    if (!voxthresh.unset() || !voxuncthresh.unset()) {
+      pval = "P";
+    }
+    lmaxfile << "Cluster Index\t"+pval+scalarnm+"\tx\ty\tz\t" << endl;
     volume<int> lmaxvol;
     copyconvert(zvol,lmaxvol);
     lmaxvol=0;
@@ -492,14 +504,29 @@ void print_results(const vector<int>& idx,
       int index=idx[n];
       if (pthreshindex[index]>0) {
 	vector<int>   lmaxlistZ(size[index]);
+  vector<float>   lmaxlistP(size[index]);
 	vector<triple<float> > lmaxlistR(size[index]);
 	int lmaxlistcounter=0;
+  if (!voxthresh.unset() || !voxuncthresh.unset()){
+    clusterthresh = false;
+  } else {
+    clusterthresh = true;
+  }
+  Infer infer(dLh.value(), -1000, voxvol.value(), clusterthresh, !voxthresh.unset());
+
 	for (int z=labelim.minz(); z<=labelim.maxz(); z++)
 	  for (int y=labelim.miny(); y<=labelim.maxy(); y++)
 	    for (int x=labelim.minx(); x<=labelim.maxx(); x++)
 	      if ( checkIfLocalMaxima(index,labelim,zvol,numconnected.value(),x,y,z)) {
 		lmaxvol(x,y,z)=1;
 		lmaxlistZ[lmaxlistcounter]=(int)(1000.0*zvol(x,y,z));
+    if (!voxthresh.unset()) {
+      // FIXME: Check why z is multiplied by 1000 in lmaxlistZ
+      lmaxlistP[lmaxlistcounter]=exp(infer((float)(zvol(x,y,z))));
+    } else if (!voxuncthresh.unset()) {
+      // FIXME: Check why z is multiplied by 1000 in lmaxlistZ
+      lmaxlistP[lmaxlistcounter]=exp(infer((float)(zvol(x,y,z))));
+    }
 		lmaxlistR[lmaxlistcounter].x=x;
 		lmaxlistR[lmaxlistcounter].y=y;
 		lmaxlistR[lmaxlistcounter].z=z;
@@ -624,20 +651,38 @@ int fmrib_main(int argc, char *argv[])
   pthreshsize = size;
   int nozeroclust=0;
   if (!pthresh.unset()) {
+    Infer infer(dLh.value(), th, voxvol.value(), voxthresh.unset() & voxuncthresh.unset(), !voxthresh.unset());
+
     if (verbose.value()) 
       cout<<"Re-thresholding with p-value"<<endl;
-    Infer infer(dLh.value(), th, voxvol.value());
+    if (voxthresh.unset() & voxuncthresh.unset()) {
     if (labelim.zsize()<=1) 
       infer.setD(2); // the 2D option
     if (minclustersize.value()) {
       float pmin=1.0;
-      int nmin=0;
+        unsigned int nmin=0;
       while (pmin>=pthresh.value()) pmin=exp(infer(++nmin)); 
       cout << "Minimum cluster size under p-threshold = " << nmin << endl;
     }
+    } 
+
+
     for (int n=1; n<length; n++) {
-      int k = size[n];
+      unsigned int k = size[n];
+      // FIXME: Check that maxvals[n] is indeed the max value of the statistic 
+      // within the cluster
+      float stat = maxvals[n]; 
+      if (voxthresh.unset() & voxuncthresh.unset()) {
+        // Given cluster size k, get cluster p-value
+        cout << k << endl;
       logpvals[n] = infer(k)/log(10);
+        cout << exp(logpvals[n]*log(10)) << endl;
+      } else if (!voxthresh.unset()) {
+        logpvals[n] = infer(stat)/log(10);
+      } else if (!voxuncthresh.unset())  {
+        logpvals[n] = infer(stat)/log(10);
+      }
+
       pvals[n] = exp(logpvals[n]*log(10));
       if (pvals[n]>pthresh.value()) {
 	pthreshsize[n] = 0;
@@ -660,6 +705,9 @@ int fmrib_main(int argc, char *argv[])
   }
 
   // print table
+  cout << maxvals <<endl;
+  cout << pthreshsize <<endl;
+  cout << pvals <<endl;
   print_results(idx, size, threshidx, pvals, logpvals, maxvals, maxpos, cog, copemaxval, copemaxpos, copemean, zvol, cope, labelim);
   
   labelim.setDisplayMaximumMinimum(0,0);
@@ -739,6 +787,8 @@ int main(int argc,char *argv[])
     options.add(verbose);
     options.add(help);
     options.add(warpname);
+    options.add(voxthresh);
+    options.add(voxuncthresh);
     
     options.parse_command_line(argc, argv);
 

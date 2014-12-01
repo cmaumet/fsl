@@ -5735,7 +5735,17 @@ eds. P. Jezzard, P.M. Matthews and S.M. Smith. OUP, 2001.<br>
 	set zthresh [ fsl:exec "${FSLDIR}/bin/ptoz $fmri(prob_thresh) -g $nResels" ]
     }
 
+    # Threshold masked zstatistic according to defined threshold (voxel-wise)
+    # Maybe this should be done directcly inside cluster?
     fsl:exec "$FSLDIR/bin/fslmaths thresh_$rawstats -thr $zthresh thresh_$rawstats"
+    set COPE ""
+	if { [ string first "zfstat" $rawstats ] < 0 && [ imtest stats/cope${i} ] } {
+	    set COPE "-c stats/cope$i"
+	}
+
+    fsl:exec "$FSLDIR/bin/cluster -i thresh_$rawstats -t $fmri(z_thresh) --othresh=thresh_$rawstats -o cluster_mask_$rawstats --connectivity=[ feat5:connectivity thresh_$rawstats ] $VOXorMM --olmax=lmax_${rawstats}${STDEXT}.txt --scalarname=Z > cluster_${rawstats}${STDEXT}.txt"
+	fsl:exec "$FSLDIR/bin/cluster2html . cluster_$rawstats $STDOPT"
+
     } else {
     # cluster thresholding
 	if { $firsttime == 1 } {
