@@ -84,8 +84,6 @@ using namespace std;
 
 // constructor for FWE-corrected cluster statistic
 Infer::Infer(float udLh, float ut, unsigned int uV, bool clusterthresh=true, bool corrthresh=true) {
-  cout << "Calling cluster constructor" <<endl;
-
   if (clusterthresh) {
   // the following bounds are checked to ensure that the exponent
   //  does not underflow, which is assumed to occur for results
@@ -138,8 +136,6 @@ Infer::Infer(float udLh, float ut, unsigned int uV, bool clusterthresh=true, boo
 
 float Infer::operator() (unsigned int k) {
   if (clusterthresh){
-    cout << "EM" << Em_ << endl;
-
   // ideally returns the following:
   //    return 1 - exp(-Em_ * exp(-B_ * pow( k , 2.0 / D)));
   // but in practice must be careful about ranges
@@ -175,8 +171,6 @@ float Infer::operator() (unsigned int k) {
 
 // Calculate and return log(p) for voxel statistic
 float Infer::operator()(float z) {
-  cout << "Calling voxel operator" <<endl;
-
   // ideally returns the following:
   //    return Em_;
   double p;
