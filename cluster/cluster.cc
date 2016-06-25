@@ -513,12 +513,12 @@ void print_results(const vector<int>& idx,
   vector<float>   lmaxlistP(size[index]);
 	vector<triple<float> > lmaxlistR(size[index]);
 	int lmaxlistcounter=0;
-  if (!voxthresh.unset() || !voxuncthresh.unset()){
+  if (voxthresh.set() || voxuncthresh.set()){
     clusterthresh = false;
   } else {
     clusterthresh = true;
   }
-  Infer infer(dLh.value(), -1000, voxvol.value(), clusterthresh, !voxthresh.unset());
+  Infer infer(dLh.value(), -1000, voxvol.value(), clusterthresh, voxthresh.set());
 
 	for (int z=labelim.minz(); z<=labelim.maxz(); z++)
 	  for (int y=labelim.miny(); y<=labelim.maxy(); y++)
