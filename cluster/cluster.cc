@@ -498,9 +498,6 @@ void print_results(const vector<int>& idx,
     string scalarnm=scalarname.value();
     if (scalarnm=="") { scalarnm="Value"; }
     string pval = "";
-    if (!voxthresh.unset() || !voxuncthresh.unset()) {
-      pval = "P";
-    }
     lmaxfile << "Cluster Index\t"+pval+scalarnm+"\tx\ty\tz\t" << endl;
     volume<int> lmaxvol;
     copyconvert(zvol,lmaxvol);
