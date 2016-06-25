@@ -401,6 +401,9 @@ void print_results(const vector<int>& idx,
   volume<T> stdvol;
   Matrix trans;
   bool clusterthresh;
+
+  cout << "---------------------------" << endl;
+  cout << "Calling print_results" << endl;
   
   const volume<T> *refvol = &zvol;
   if ( transformname.set() && stdvolname.set() ) {
@@ -458,6 +461,9 @@ void print_results(const vector<int>& idx,
   }
 
   if (!no_table.value()) cout << tablehead << endl;
+
+  cout << "pthreshindex[index] --" << endl;
+  cout << pthreshindex << endl;
 
   for (int n=length-1; n>=1; n--) {
     int index=idx[n];
@@ -525,6 +531,7 @@ void print_results(const vector<int>& idx,
       lmaxlistP[lmaxlistcounter]=exp(infer((float)(zvol(x,y,z))));
     } else if (!voxuncthresh.unset()) {
       // FIXME: Check why z is multiplied by 1000 in lmaxlistZ
+      cout << "the other call to infer" << endl;
       lmaxlistP[lmaxlistcounter]=exp(infer((float)(zvol(x,y,z))));
     }
 		lmaxlistR[lmaxlistcounter].x=x;
@@ -533,7 +540,14 @@ void print_results(const vector<int>& idx,
 		lmaxlistcounter++;
 	      }
 
+  cout << "lmaxlistP" << endl;
+  cout << lmaxlistP << endl;
+
 	lmaxlistZ.resize(lmaxlistcounter);
+  cout << "lmaxlistZ" << endl;
+  cout << lmaxlistZ << endl;
+  cout << "***" << endl;
+
 	vector<int> lmaxidx = get_sortindex(lmaxlistZ);
 	if (peakdist.value()>0)
 	{
@@ -650,6 +664,10 @@ int fmrib_main(int argc, char *argv[])
   vector<float> pvals(length), logpvals(length);
   pthreshsize = size;
   int nozeroclust=0;
+
+  cout << "pthresh.unset()" << endl;
+  cout << pthresh.unset() << endl;  
+
   if (!pthresh.unset()) {
     Infer infer(dLh.value(), th, voxvol.value(), voxthresh.unset() & voxuncthresh.unset(), !voxthresh.unset());
 
@@ -674,16 +692,18 @@ int fmrib_main(int argc, char *argv[])
       float stat = maxvals[n]; 
       if (voxthresh.unset() & voxuncthresh.unset()) {
         // Given cluster size k, get cluster p-value
-        cout << k << endl;
       logpvals[n] = infer(k)/log(10);
-        cout << exp(logpvals[n]*log(10)) << endl;
       } else if (!voxthresh.unset()) {
         logpvals[n] = infer(stat)/log(10);
       } else if (!voxuncthresh.unset())  {
         logpvals[n] = infer(stat)/log(10);
+        cout << "uncorrected !!" << endl;
       }
-
+      cout << "logpvals" << endl;
+      cout << logpvals << endl;
       pvals[n] = exp(logpvals[n]*log(10));
+      cout << "pvals" << endl;
+      cout << pvals << endl;      
       if (pvals[n]>pthresh.value()) {
 	pthreshsize[n] = 0;
 	nozeroclust++;
@@ -705,9 +725,9 @@ int fmrib_main(int argc, char *argv[])
   }
 
   // print table
-  cout << maxvals <<endl;
-  cout << pthreshsize <<endl;
-  cout << pvals <<endl;
+  cout << "pvals" << endl;
+  cout << pvals << endl;
+
   print_results(idx, size, threshidx, pvals, logpvals, maxvals, maxpos, cog, copemaxval, copemaxpos, copemean, zvol, cope, labelim);
   
   labelim.setDisplayMaximumMinimum(0,0);
