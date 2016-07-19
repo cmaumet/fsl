@@ -84,10 +84,8 @@ using namespace std;
 
 // constructor for FWE-corrected cluster/voxel statistic
 Infer::Infer(float udLh, float ut, unsigned int uV, bool clusterthresh=true, bool corrthresh=true) {
-  cout << "corrthresh in constructor" << endl;
-  cout << corrthresh<< endl;
-
   this->corrthresh = corrthresh;
+  this->clusterthresh = clusterthresh;
 
   if (clusterthresh) {
   // the following bounds are checked to ensure that the exponent
@@ -134,29 +132,15 @@ Infer::Infer(float udLh, float ut, unsigned int uV, bool clusterthresh=true, boo
     // dimensionality
     D = 3.0;
   } else {
+    // FIXME: uncorrected threshold not handled yet
     // Voxel-wise uncorrected threshold
     // cout << "uncorrected threshold - not handled yet !!!";
   }
-  cout << "corrthresh in end constructor" << endl;
-  cout << corrthresh<< endl;  
 }
   
-//////////////////////////////////////////////////////////////////////////////
-
-  void Infer::print_corrthresh(){
-    cout << "corrthresh: " << this->corrthresh << endl;
-    cout << "(bool)corrthresh: " << (bool)corrthresh << endl;
-    cout << "((bool)corrthresh == true): " << ((bool)corrthresh == true) << endl;
-    cout << "((bool)corrthresh == false): " << ((bool)corrthresh == false) << endl;
-    cout << "------" << endl;
-  }
-
 // Calculate and return log(p) for cluster statistic
 
 float Infer::operator() (unsigned int k) {
-  cout << "operator with unsigned int k !!";
-  cout << clusterthresh;
-
   if (clusterthresh){
   // ideally returns the following:
   //    return 1 - exp(-Em_ * exp(-B_ * pow( k , 2.0 / D)));
@@ -193,16 +177,11 @@ float Infer::operator() (unsigned int k) {
 
 // Calculate and return log(p) for voxel statistic
 float Infer::operator()(float z) {
-  cout << "operator with z !!" << endl;
-  cout << "corrthresh in operator" << endl;
-  cout << corrthresh<< endl;
-
   // ideally returns the following:
   //    return Em_;
   double p;
 
   if (corrthresh){
-    cout << "CORR"<< endl;    
     // NB: the (sqr(t) -1) is previous D=3 version (from where??)
     if (fabs(z)<13.0) {
       Em_ = V * pow(double(2*M_PI),double(-(D+1)/2)) * dLh * pow((MISCMATHS::Sqr(z) - 1), (D-1)/2) *
@@ -212,14 +191,7 @@ float Infer::operator()(float z) {
     }
     return log(Em_);
   } else {
-    cout << "UNCORR"<< endl;
-
     p = 1-0.5*(1+erf(z/(1*sqrt(2))));
-    cout << z<< endl;
-    cout << p<< endl;
-    cout << log(p)<< endl;
-    cout << exp(log(p)*log(10)) << endl;
-    cout << "---++++++++++++++++++++++++"<< endl;
     return log(p);
   }
   

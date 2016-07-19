@@ -401,10 +401,7 @@ void print_results(const vector<int>& idx,
   volume<T> stdvol;
   Matrix trans;
   bool clusterthresh;
-
-  cout << "---------------------------" << endl;
-  cout << "Calling print_results" << endl;
-  
+ 
   const volume<T> *refvol = &zvol;
   if ( transformname.set() && stdvolname.set() ) {
     read_volume(stdvol,stdvolname.value());
@@ -462,9 +459,6 @@ void print_results(const vector<int>& idx,
 
   if (!no_table.value()) cout << tablehead << endl;
 
-  cout << "pthreshindex[index] --" << endl;
-  cout << pthreshindex << endl;
-
   for (int n=length-1; n>=1; n--) {
     int index=idx[n];
     int k = size[index];
@@ -488,7 +482,7 @@ void print_results(const vector<int>& idx,
     }
   }
 
-  // output local maxima
+  // output local maxima (peak table)
   if (outlmax.set() || outlmaxim.set()) {
     string outlmaxfile="/dev/null";
     if (outlmax.set()) { outlmaxfile=outlmax.value(); }
@@ -516,7 +510,6 @@ void print_results(const vector<int>& idx,
     clusterthresh = true;
   }
   Infer infer(dLh.value(), -1000, voxvol.value(), clusterthresh, voxthresh.set());
-  infer.print_corrthresh();
 
 	for (int z=labelim.minz(); z<=labelim.maxz(); z++)
 	  for (int y=labelim.miny(); y<=labelim.maxy(); y++)
@@ -525,21 +518,16 @@ void print_results(const vector<int>& idx,
 		lmaxvol(x,y,z)=1;
 		lmaxlistZ[lmaxlistcounter]=(int)(1000.0*zvol(x,y,z));
     if (voxthresh.set()) {
-      cout << "Option 1 ------------------>" << endl;
-      infer.print_corrthresh();
       // Voxel-wise corrected
       // FIXME: Check why z is multiplied by 1000 in lmaxlistZ
       lmaxlistP[lmaxlistcounter]=exp(infer((float)(zvol(x,y,z))));
     } else if (voxuncthresh.set()) {
-      cout << "Option 2 ------------------>" << endl;
       // Voxel-wise uncorrected
       // FIXME: Check why z is multiplied by 1000 in lmaxlistZ
       // Peak table
-      cout << "the other call to infer for the peaks!!" << endl;
       lmaxlistP[lmaxlistcounter]=exp(infer((float)(zvol(x,y,z))));
     }  else {
       // Cluster-wise corrected
-      cout << "JUST ADDED ------------------>" << endl;
       // FIXME should be different ???
       lmaxlistP[lmaxlistcounter]=exp(infer((float)(zvol(x,y,z))));
     }
@@ -549,13 +537,7 @@ void print_results(const vector<int>& idx,
 		lmaxlistcounter++;
 	      }
 
-  cout << "lmaxlistP" << endl;
-  cout << lmaxlistP << endl;
-
 	lmaxlistZ.resize(lmaxlistcounter);
-  cout << "lmaxlistZ" << endl;
-  cout << lmaxlistZ << endl;
-  cout << "***" << endl;
 
 	vector<int> lmaxidx = get_sortindex(lmaxlistZ);
 	if (peakdist.value()>0)
@@ -674,19 +656,9 @@ int fmrib_main(int argc, char *argv[])
   pthreshsize = size;
   int nozeroclust=0;
 
-  cout << "pthresh.unset()" << endl;
-  cout << pthresh.unset() << endl;  
-
   if (!pthresh.unset()) {
     // Call to infer to build the cluster table
-    cout << "--- in !pthresh.unset() ---" << endl;
-    cout << "voxthresh.set() || voxuncthresh.set()" << endl;
-    cout <<  voxthresh.set() << endl;
-    cout << voxuncthresh.set() << endl;
     Infer infer(dLh.value(), th, voxvol.value(), !(voxthresh.set() || voxuncthresh.set()), voxthresh.set());
-    cout << "HERE ----" << endl;
-    infer.print_corrthresh();
-
 
     if (verbose.value()) 
       cout<<"Re-thresholding with p-value"<<endl;
@@ -714,13 +686,8 @@ int fmrib_main(int argc, char *argv[])
         logpvals[n] = infer(stat)/log(10);
       } else if (!voxuncthresh.unset())  {
         logpvals[n] = infer(stat)/log(10);
-        cout << "uncorrected !!" << endl;
       }
-      cout << "logpvals" << endl;
-      cout << logpvals << endl;
       pvals[n] = exp(logpvals[n]*log(10));
-      cout << "pvals" << endl;
-      cout << pvals << endl;      
       if (pvals[n]>pthresh.value()) {
 	pthreshsize[n] = 0;
 	nozeroclust++;
@@ -742,9 +709,6 @@ int fmrib_main(int argc, char *argv[])
   }
 
   // print table
-  cout << "pvals" << endl;
-  cout << pvals << endl;
-
   print_results(idx, size, threshidx, pvals, logpvals, maxvals, maxpos, cog, copemaxval, copemaxpos, copemean, zvol, cope, labelim);
   
   labelim.setDisplayMaximumMinimum(0,0);
