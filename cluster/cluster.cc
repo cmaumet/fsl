@@ -517,20 +517,7 @@ void print_results(const vector<int>& idx,
 	      if ( checkIfLocalMaxima(index,labelim,zvol,numconnected.value(),x,y,z)) {
 		lmaxvol(x,y,z)=1;
 		lmaxlistZ[lmaxlistcounter]=(int)(1000.0*zvol(x,y,z));
-    if (voxthresh.set()) {
-      // Voxel-wise corrected
-      // FIXME: Check why z is multiplied by 1000 in lmaxlistZ
-      lmaxlistP[lmaxlistcounter]=exp(infer((float)(zvol(x,y,z))));
-    } else if (voxuncthresh.set()) {
-      // Voxel-wise uncorrected
-      // FIXME: Check why z is multiplied by 1000 in lmaxlistZ
-      // Peak table
-      lmaxlistP[lmaxlistcounter]=exp(infer((float)(zvol(x,y,z))));
-    }  else {
-      // Cluster-wise corrected
-      // FIXME should be different ???
-      lmaxlistP[lmaxlistcounter]=exp(infer((float)(zvol(x,y,z))));
-    }
+    lmaxlistP[lmaxlistcounter]=exp(infer((float)(zvol(x,y,z))));
 		lmaxlistR[lmaxlistcounter].x=x;
 		lmaxlistR[lmaxlistcounter].y=y;
 		lmaxlistR[lmaxlistcounter].z=z;
@@ -657,7 +644,7 @@ int fmrib_main(int argc, char *argv[])
   int nozeroclust=0;
 
   if (!pthresh.unset()) {
-    // Call to infer to build the cluster table
+    // Build the cluster table
     Infer infer(dLh.value(), th, voxvol.value(), !(voxthresh.set() || voxuncthresh.set()), voxthresh.set());
 
     if (verbose.value()) 
@@ -676,21 +663,22 @@ int fmrib_main(int argc, char *argv[])
 
     for (int n=1; n<length; n++) {
       unsigned int k = size[n];
-      // FIXME: Check that maxvals[n] is indeed the max value of the statistic 
-      // within the cluster
+      // Max value of the z-statistic within the cluster
       float stat = maxvals[n]; 
       if (voxthresh.unset() & voxuncthresh.unset()) {
         // Given cluster size k, get cluster p-value
-      logpvals[n] = infer(k)/log(10);
-      } else if (!voxthresh.unset()) {
+        logpvals[n] = infer(k)/log(10);
+      } else if (voxthresh.set()) {
+        // Given z-stat get GRF corrected p-value
         logpvals[n] = infer(stat)/log(10);
-      } else if (!voxuncthresh.unset())  {
+      } else if (voxuncthresh.set())  {
+        // Given z-stat get uncorrected p-value
         logpvals[n] = infer(stat)/log(10);
       }
       pvals[n] = exp(logpvals[n]*log(10));
       if (pvals[n]>pthresh.value()) {
-	pthreshsize[n] = 0;
-	nozeroclust++;
+	      pthreshsize[n] = 0;
+        nozeroclust++;
       }
     }
   }
