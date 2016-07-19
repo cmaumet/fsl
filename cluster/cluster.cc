@@ -400,7 +400,6 @@ void print_results(const vector<int>& idx,
   copyconvert(copemaxpos,fcopemaxpos);
   volume<T> stdvol;
   Matrix trans;
- 
   const volume<T> *refvol = &zvol;
   if ( transformname.set() && stdvolname.set() ) {
     read_volume(stdvol,stdvolname.value());
@@ -501,7 +500,6 @@ void print_results(const vector<int>& idx,
 	vector<int>   lmaxlistZ(size[index]);
 	vector<triple<float> > lmaxlistR(size[index]);
 	int lmaxlistcounter=0;
-
 	for (int z=labelim.minz(); z<=labelim.maxz(); z++)
 	  for (int y=labelim.miny(); y<=labelim.maxy(); y++)
 	    for (int x=labelim.minx(); x<=labelim.maxx(); x++)
@@ -515,7 +513,6 @@ void print_results(const vector<int>& idx,
 	      }
 
 	lmaxlistZ.resize(lmaxlistcounter);
-
 	vector<int> lmaxidx = get_sortindex(lmaxlistZ);
 	if (peakdist.value()>0)
 	{
@@ -632,13 +629,12 @@ int fmrib_main(int argc, char *argv[])
   vector<float> pvals(length), logpvals(length);
   pthreshsize = size;
   int nozeroclust=0;
-
   if (!pthresh.unset()) {
+    if (verbose.value()) 
+      cout<<"Re-thresholding with p-value"<<endl;    
     // Build the cluster table
     Infer infer(dLh.value(), th, voxvol.value(), !(voxthresh.set() || voxuncthresh.set()), voxthresh.set());
 
-    if (verbose.value()) 
-      cout<<"Re-thresholding with p-value"<<endl;
     if (voxthresh.unset() & voxuncthresh.unset()) {
     if (labelim.zsize()<=1) 
       infer.setD(2); // the 2D option
@@ -649,8 +645,6 @@ int fmrib_main(int argc, char *argv[])
       cout << "Minimum cluster size under p-threshold = " << nmin << endl;
     }
     } 
-
-
     for (int n=1; n<length; n++) {
       unsigned int k = size[n];
       // Max value of the z-statistic within the cluster
@@ -667,7 +661,7 @@ int fmrib_main(int argc, char *argv[])
       }
       pvals[n] = exp(logpvals[n]*log(10));
       if (pvals[n]>pthresh.value()) {
-	      pthreshsize[n] = 0;
+        pthreshsize[n] = 0;
         nozeroclust++;
       }
     }

@@ -137,7 +137,10 @@ Infer::Infer(float udLh, float ut, unsigned int uV, bool clusterthresh=true, boo
   }
 }
   
+//////////////////////////////////////////////////////////////////////////////
+
 // Calculate and return log(p) for cluster statistic
+
 float Infer::operator() (unsigned int k) {
   if (clusterthresh){
   // ideally returns the following:
