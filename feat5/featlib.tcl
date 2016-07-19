@@ -5942,15 +5942,9 @@ $maskcomments
                 set firsttime 0
             }
 
-            if { $fmri(thresh) == 3 } {
             fsl:echo report_poststats.html "<p>$conname<br>
     <a href=\"cluster_${rawstats}${STDEXT}.html\"><IMG BORDER=0 SRC=\"rendered_thresh_${rawstats}.png\"></a>
     "
-            } else {
-            fsl:echo report_poststats.html "<p>$conname<br>
-    <IMG BORDER=0 SRC=\"rendered_thresh_${rawstats}.png\">
-    "
-           }
         }
     }
 
