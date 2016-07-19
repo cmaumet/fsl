@@ -135,7 +135,7 @@ Option<float> thresh(string("-t,--thresh,--zthresh"), 2.3,
 		     string("threshold for input volume"),
 		     true, requires_argument);
 Option<float> pthresh(string("-p,--pthresh"), 0.01,
-		      string("p-threshold for clusters"),
+		      string("p-threshold"),
 		      false, requires_argument);
 Option<float> peakdist(string("--peakdist"), 0,
 		      string("minimum distance between local maxima/minima, in mm (default 0)"),
