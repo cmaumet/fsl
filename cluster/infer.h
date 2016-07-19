@@ -81,6 +81,8 @@ public:
 
   float operator()(float z);   // returns log(p) of voxel stat
 
+  void print_corrthresh();
+
 private:
   float Em_, B_, dLh, t, V, D;
   bool clusterthresh, corrthresh;

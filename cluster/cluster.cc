@@ -516,6 +516,7 @@ void print_results(const vector<int>& idx,
     clusterthresh = true;
   }
   Infer infer(dLh.value(), -1000, voxvol.value(), clusterthresh, voxthresh.set());
+  infer.print_corrthresh();
 
 	for (int z=labelim.minz(); z<=labelim.maxz(); z++)
 	  for (int y=labelim.miny(); y<=labelim.maxy(); y++)
@@ -523,12 +524,23 @@ void print_results(const vector<int>& idx,
 	      if ( checkIfLocalMaxima(index,labelim,zvol,numconnected.value(),x,y,z)) {
 		lmaxvol(x,y,z)=1;
 		lmaxlistZ[lmaxlistcounter]=(int)(1000.0*zvol(x,y,z));
-    if (!voxthresh.unset()) {
+    if (voxthresh.set()) {
+      cout << "Option 1 ------------------>" << endl;
+      infer.print_corrthresh();
+      // Voxel-wise corrected
       // FIXME: Check why z is multiplied by 1000 in lmaxlistZ
       lmaxlistP[lmaxlistcounter]=exp(infer((float)(zvol(x,y,z))));
-    } else if (!voxuncthresh.unset()) {
+    } else if (voxuncthresh.set()) {
+      cout << "Option 2 ------------------>" << endl;
+      // Voxel-wise uncorrected
       // FIXME: Check why z is multiplied by 1000 in lmaxlistZ
-      cout << "the other call to infer" << endl;
+      // Peak table
+      cout << "the other call to infer for the peaks!!" << endl;
+      lmaxlistP[lmaxlistcounter]=exp(infer((float)(zvol(x,y,z))));
+    }  else {
+      // Cluster-wise corrected
+      cout << "JUST ADDED ------------------>" << endl;
+      // FIXME should be different ???
       lmaxlistP[lmaxlistcounter]=exp(infer((float)(zvol(x,y,z))));
     }
 		lmaxlistR[lmaxlistcounter].x=x;
@@ -666,7 +678,15 @@ int fmrib_main(int argc, char *argv[])
   cout << pthresh.unset() << endl;  
 
   if (!pthresh.unset()) {
-    Infer infer(dLh.value(), th, voxvol.value(), voxthresh.unset() & voxuncthresh.unset(), !voxthresh.unset());
+    // Call to infer to build the cluster table
+    cout << "--- in !pthresh.unset() ---" << endl;
+    cout << "voxthresh.set() || voxuncthresh.set()" << endl;
+    cout <<  voxthresh.set() << endl;
+    cout << voxuncthresh.set() << endl;
+    Infer infer(dLh.value(), th, voxvol.value(), !(voxthresh.set() || voxuncthresh.set()), voxthresh.set());
+    cout << "HERE ----" << endl;
+    infer.print_corrthresh();
+
 
     if (verbose.value()) 
       cout<<"Re-thresholding with p-value"<<endl;
