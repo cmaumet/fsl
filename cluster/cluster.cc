@@ -491,8 +491,7 @@ void print_results(const vector<int>& idx,
       cerr << "Could not open file " << outlmax.value() << " for writing" << endl;
     string scalarnm=scalarname.value();
     if (scalarnm=="") { scalarnm="Value"; }
-    string pval = "";
-    lmaxfile << "Cluster Index\t"+pval+scalarnm+"\tx\ty\tz\t" << endl;
+    lmaxfile << "Cluster Index\t"+scalarnm+"\tx\ty\tz\t" << endl;
     volume<int> lmaxvol;
     copyconvert(zvol,lmaxvol);
     lmaxvol=0;
