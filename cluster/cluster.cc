@@ -400,7 +400,6 @@ void print_results(const vector<int>& idx,
   copyconvert(copemaxpos,fcopemaxpos);
   volume<T> stdvol;
   Matrix trans;
-  bool clusterthresh;
  
   const volume<T> *refvol = &zvol;
   if ( transformname.set() && stdvolname.set() ) {
@@ -500,15 +499,8 @@ void print_results(const vector<int>& idx,
       int index=idx[n];
       if (pthreshindex[index]>0) {
 	vector<int>   lmaxlistZ(size[index]);
-  vector<float>   lmaxlistP(size[index]);
 	vector<triple<float> > lmaxlistR(size[index]);
 	int lmaxlistcounter=0;
-  if (voxthresh.set() || voxuncthresh.set()){
-    clusterthresh = false;
-  } else {
-    clusterthresh = true;
-  }
-  Infer infer(dLh.value(), -1000, voxvol.value(), clusterthresh, voxthresh.set());
 
 	for (int z=labelim.minz(); z<=labelim.maxz(); z++)
 	  for (int y=labelim.miny(); y<=labelim.maxy(); y++)
@@ -516,7 +508,6 @@ void print_results(const vector<int>& idx,
 	      if ( checkIfLocalMaxima(index,labelim,zvol,numconnected.value(),x,y,z)) {
 		lmaxvol(x,y,z)=1;
 		lmaxlistZ[lmaxlistcounter]=(int)(1000.0*zvol(x,y,z));
-    lmaxlistP[lmaxlistcounter]=exp(infer((float)(zvol(x,y,z))));
 		lmaxlistR[lmaxlistcounter].x=x;
 		lmaxlistR[lmaxlistcounter].y=y;
 		lmaxlistR[lmaxlistcounter].z=z;
