@@ -5760,7 +5760,7 @@ eds. P. Jezzard, P.M. Matthews and S.M. Smith. OUP, 2001.<br>
 	set COPE "-c stats/cope$i"
     }
 
-    fsl:exec "$FSLDIR/bin/cluster -i thresh_$rawstats $COPE -t $z_thresh -p $fmri(prob_thresh) -d $fmri(DLH$rawstats) --volume=$fmri(VOLUME$rawstats) --othresh=thresh_$rawstats -o cluster_mask_$rawstats --connectivity=[ feat5:connectivity thresh_$rawstats ] $VOXorMM --olmax=lmax_${rawstats}${STDEXT}.txt --scalarname=Z $iscorrthresh > cluster_${rawstats}${STDEXT}.txt"
+    fsl:exec "$FSLDIR/bin/cluster -i thresh_$rawstats $COPE -t $zthresh -p $fmri(prob_thresh) -d $fmri(DLH$rawstats) --volume=$fmri(VOLUME$rawstats) --othresh=thresh_$rawstats -o cluster_mask_$rawstats --connectivity=[ feat5:connectivity thresh_$rawstats ] $VOXorMM --olmax=lmax_${rawstats}${STDEXT}.txt --scalarname=Z $iscorrthresh > cluster_${rawstats}${STDEXT}.txt"
 	fsl:exec "$FSLDIR/bin/cluster2html . cluster_$rawstats $STDOPT"
 
     } else {
