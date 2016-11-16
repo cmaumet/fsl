@@ -5739,7 +5739,7 @@ foreach rawstats $rawstatslist {
         if { $firsttime == 1 } {
             if { $fmri(thresh) == 1 } {
                 set ps "$ps at P=$fmri(prob_thresh) (uncorrected)."
-                set zthresh [ fsl:exec "${FSLDIR}/bin/ptoz $fmri(prob_thresh)" ]
+                set z_thresh [ fsl:exec "${FSLDIR}/bin/ptoz $fmri(prob_thresh)" ]
                 set iscorrthresh  " --voxuncthresh"
             } else {
                 set ps "$ps using GRF-theory-based maximum height thresholding with a (corrected) significance threshold of P=$fmri(prob_thresh) \[Worsley 2001]."
@@ -5752,7 +5752,7 @@ eds. P. Jezzard, P.M. Matthews and S.M. Smith. OUP, 2001.<br>
         if { $fmri(thresh) == 2 } {
             set nResels [ expr int ( $fmri(VOLUME$rawstats) / $fmri(RESELS$rawstats) ) ]
             if { $nResels < 1 } { set nResels 1 }
-            set zthresh [ fsl:exec "${FSLDIR}/bin/ptoz $fmri(prob_thresh) -g $nResels" ]
+            set z_thresh [ fsl:exec "${FSLDIR}/bin/ptoz $fmri(prob_thresh) -g $nResels" ]
         }
 
         set COPE ""
@@ -5760,7 +5760,7 @@ eds. P. Jezzard, P.M. Matthews and S.M. Smith. OUP, 2001.<br>
             set COPE "-c stats/cope$i"
         }
 
-        fsl:exec "$FSLDIR/bin/cluster -i thresh_$rawstats $COPE -t $zthresh -p $fmri(prob_thresh) -d $fmri(DLH$rawstats) --volume=$fmri(VOLUME$rawstats) --othresh=thresh_$rawstats -o cluster_mask_$rawstats --connectivity=[ feat5:connectivity thresh_$rawstats ] $VOXorMM --olmax=lmax_${rawstats}${STDEXT}.txt --scalarname=Z $iscorrthresh > cluster_${rawstats}${STDEXT}.txt"
+        fsl:exec "$FSLDIR/bin/cluster -i thresh_$rawstats $COPE -t $z_thresh -p $fmri(prob_thresh) -d $fmri(DLH$rawstats) --volume=$fmri(VOLUME$rawstats) --othresh=thresh_$rawstats -o cluster_mask_$rawstats --connectivity=[ feat5:connectivity thresh_$rawstats ] $VOXorMM --olmax=lmax_${rawstats}${STDEXT}.txt --scalarname=Z $iscorrthresh > cluster_${rawstats}${STDEXT}.txt"
         fsl:exec "$FSLDIR/bin/cluster2html . cluster_$rawstats $STDOPT"
 
     } else {
