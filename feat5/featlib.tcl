@@ -5838,9 +5838,26 @@ After all thresholding, $rawstats was masked with $themask.<br>"
 
 
 # re-run cluster for StdSpace in lower level
-if { $higherLevel == 0 && [ file exists reg/example_func2standard.mat ] && $fmri(thresh) == 3 } {
+if { $higherLevel == 0 && [ file exists reg/example_func2standard.mat ]} {
 
-    set z_thresh    $fmri(z_thresh)
+
+	if { $fmri(thresh) == 3 } {
+    	set z_thresh    $fmri(z_thresh)
+    	set iscorrthresh  ""
+    } else {
+    	if { $fmri(thresh) == 2 } {
+    		set nResels [ expr int ( $fmri(VOLUME$rawstats) / $fmri(RESELS$rawstats) ) ]
+			if { $nResels < 1 } { set nResels 1 }
+			set z_thresh [ fsl:exec "${FSLDIR}/bin/ptoz $fmri(prob_thresh) -g $nResels" ]
+			set iscorrthresh  " --voxthresh"
+		} else {
+    		if { $fmri(thresh) == 1 } 
+    		{
+    			set z_thresh [ fsl:exec "${FSLDIR}/bin/ptoz $fmri(prob_thresh)" ]
+			    set iscorrthresh  " --voxuncthresh"
+    		}			
+		}
+    }
     set prob_thresh $fmri(prob_thresh)
 
     if { $fmri(analysis) == 0 } {
@@ -5862,7 +5879,7 @@ if { $higherLevel == 0 && [ file exists reg/example_func2standard.mat ] && $fmri
 	    set stdxfm "-x reg/example_func2highres.mat --warpvol=reg/highres2standard_warp"
 	}
 
-	fsl:exec "$FSLDIR/bin/cluster -i thresh_$rawstats ${COPE} -t $z_thresh  -p $prob_thresh -d $fmri(DLH$rawstats) --volume=$fmri(VOLUME$rawstats) $stdxfm --stdvol=reg/standard --mm --connectivity=[ feat5:connectivity thresh_$rawstats ] --olmax=lmax_${rawstats}_std.txt --scalarname=Z > cluster_${rawstats}_std.txt"
+	fsl:exec "$FSLDIR/bin/cluster -i thresh_$rawstats ${COPE} -t $z_thresh  -p $prob_thresh -d $fmri(DLH$rawstats) --volume=$fmri(VOLUME$rawstats) $stdxfm --stdvol=reg/standard --mm --connectivity=[ feat5:connectivity thresh_$rawstats ] --olmax=lmax_${rawstats}_std.txt --scalarname=Z $iscorrthresh > cluster_${rawstats}_std.txt"
 	fsl:exec "$FSLDIR/bin/cluster2html . cluster_${rawstats} -std"
     }
 }
