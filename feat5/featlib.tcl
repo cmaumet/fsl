@@ -5732,52 +5732,52 @@ set firsttime 1
 foreach rawstats $rawstatslist {
     set i [ string trimleft $rawstats "abcdefghijklmnopqrstuvwxyz_" ]
     if { $firsttime == 1 } {
-	set ps "$ps Z (Gaussianised T/F) statistic images were thresholded"
+        set ps "$ps Z (Gaussianised T/F) statistic images were thresholded"
     }
     if { $fmri(thresh) < 3 } {
-    # voxel-based thresholding
-    if { $firsttime == 1 } {
-	if { $fmri(thresh) == 1 } {
-	    set ps "$ps at P=$fmri(prob_thresh) (uncorrected)."
-	    set zthresh [ fsl:exec "${FSLDIR}/bin/ptoz $fmri(prob_thresh)" ]
-	    set iscorrthresh  " --voxuncthresh"
-	} else {
-	    set ps "$ps using GRF-theory-based maximum height thresholding with a (corrected) significance threshold of P=$fmri(prob_thresh) \[Worsley 2001]."
-	    set rs "$rs\[Worsley 2001\] K.J. Worsley. Statistical analysis of activation images. Ch 14, in Functional MRI: An Introduction to Methods,
+        # voxel-based thresholding
+        if { $firsttime == 1 } {
+            if { $fmri(thresh) == 1 } {
+                set ps "$ps at P=$fmri(prob_thresh) (uncorrected)."
+                set zthresh [ fsl:exec "${FSLDIR}/bin/ptoz $fmri(prob_thresh)" ]
+                set iscorrthresh  " --voxuncthresh"
+            } else {
+                set ps "$ps using GRF-theory-based maximum height thresholding with a (corrected) significance threshold of P=$fmri(prob_thresh) \[Worsley 2001]."
+                set rs "$rs\[Worsley 2001\] K.J. Worsley. Statistical analysis of activation images. Ch 14, in Functional MRI: An Introduction to Methods,
 eds. P. Jezzard, P.M. Matthews and S.M. Smith. OUP, 2001.<br>
 "
-	    set iscorrthresh  " --voxthresh"
-	}
-    }
-    if { $fmri(thresh) == 2 } {
-	set nResels [ expr int ( $fmri(VOLUME$rawstats) / $fmri(RESELS$rawstats) ) ]
-	if { $nResels < 1 } { set nResels 1 }
-	set zthresh [ fsl:exec "${FSLDIR}/bin/ptoz $fmri(prob_thresh) -g $nResels" ]
-    }
+                set iscorrthresh  " --voxthresh"
+            }
+        }
+        if { $fmri(thresh) == 2 } {
+            set nResels [ expr int ( $fmri(VOLUME$rawstats) / $fmri(RESELS$rawstats) ) ]
+            if { $nResels < 1 } { set nResels 1 }
+            set zthresh [ fsl:exec "${FSLDIR}/bin/ptoz $fmri(prob_thresh) -g $nResels" ]
+        }
 
-    set COPE ""
-    if { [ string first "zfstat" $rawstats ] < 0 && [ imtest stats/cope${i} ] } {
-	set COPE "-c stats/cope$i"
-    }
+        set COPE ""
+        if { [ string first "zfstat" $rawstats ] < 0 && [ imtest stats/cope${i} ] } {
+            set COPE "-c stats/cope$i"
+        }
 
-    fsl:exec "$FSLDIR/bin/cluster -i thresh_$rawstats $COPE -t $zthresh -p $fmri(prob_thresh) -d $fmri(DLH$rawstats) --volume=$fmri(VOLUME$rawstats) --othresh=thresh_$rawstats -o cluster_mask_$rawstats --connectivity=[ feat5:connectivity thresh_$rawstats ] $VOXorMM --olmax=lmax_${rawstats}${STDEXT}.txt --scalarname=Z $iscorrthresh > cluster_${rawstats}${STDEXT}.txt"
-	fsl:exec "$FSLDIR/bin/cluster2html . cluster_$rawstats $STDOPT"
+        fsl:exec "$FSLDIR/bin/cluster -i thresh_$rawstats $COPE -t $zthresh -p $fmri(prob_thresh) -d $fmri(DLH$rawstats) --volume=$fmri(VOLUME$rawstats) --othresh=thresh_$rawstats -o cluster_mask_$rawstats --connectivity=[ feat5:connectivity thresh_$rawstats ] $VOXorMM --olmax=lmax_${rawstats}${STDEXT}.txt --scalarname=Z $iscorrthresh > cluster_${rawstats}${STDEXT}.txt"
+        fsl:exec "$FSLDIR/bin/cluster2html . cluster_$rawstats $STDOPT"
 
     } else {
-    # cluster thresholding
-	if { $firsttime == 1 } {
-	    set ps "$ps using clusters determined by Z>$fmri(z_thresh) and a (corrected) cluster significance threshold of P=$fmri(prob_thresh) \[Worsley 2001]."
-	    set rs "$rs\[Worsley 2001\] K.J. Worsley. Statistical analysis of activation images. Ch 14, in Functional MRI: An Introduction to Methods,
+        # cluster thresholding
+        if { $firsttime == 1 } {
+            set ps "$ps using clusters determined by Z>$fmri(z_thresh) and a (corrected) cluster significance threshold of P=$fmri(prob_thresh) \[Worsley 2001]."
+            set rs "$rs\[Worsley 2001\] K.J. Worsley. Statistical analysis of activation images. Ch 14, in Functional MRI: An Introduction to Methods,
 eds. P. Jezzard, P.M. Matthews and S.M. Smith. OUP, 2001.<br>
 "
-	}
+        }
 
-	set COPE ""
-	if { [ string first "zfstat" $rawstats ] < 0 && [ imtest stats/cope${i} ] } {
-	    set COPE "-c stats/cope$i"
-	}
-	fsl:exec "$FSLDIR/bin/cluster -i thresh_$rawstats $COPE -t $fmri(z_thresh) -p $fmri(prob_thresh) -d $fmri(DLH$rawstats) --volume=$fmri(VOLUME$rawstats) --othresh=thresh_$rawstats -o cluster_mask_$rawstats --connectivity=[ feat5:connectivity thresh_$rawstats ] $VOXorMM --olmax=lmax_${rawstats}${STDEXT}.txt --scalarname=Z > cluster_${rawstats}${STDEXT}.txt"
-	fsl:exec "$FSLDIR/bin/cluster2html . cluster_$rawstats $STDOPT"
+        set COPE ""
+        if { [ string first "zfstat" $rawstats ] < 0 && [ imtest stats/cope${i} ] } {
+            set COPE "-c stats/cope$i"
+        }
+        fsl:exec "$FSLDIR/bin/cluster -i thresh_$rawstats $COPE -t $fmri(z_thresh) -p $fmri(prob_thresh) -d $fmri(DLH$rawstats) --volume=$fmri(VOLUME$rawstats) --othresh=thresh_$rawstats -o cluster_mask_$rawstats --connectivity=[ feat5:connectivity thresh_$rawstats ] $VOXorMM --olmax=lmax_${rawstats}${STDEXT}.txt --scalarname=Z > cluster_${rawstats}${STDEXT}.txt"
+        fsl:exec "$FSLDIR/bin/cluster2html . cluster_$rawstats $STDOPT"
     }
 
     set firsttime 0
