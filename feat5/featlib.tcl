@@ -5739,6 +5739,7 @@ foreach rawstats $rawstatslist {
         if { $firsttime == 1 } {
             if { $fmri(thresh) == 1 } {
                 set ps "$ps at P=$fmri(prob_thresh) (uncorrected)."
+                # Threshold for the input image calculated from p-value
                 set z_thresh [ fsl:exec "${FSLDIR}/bin/ptoz $fmri(prob_thresh)" ]
                 set iscorrthresh  " --voxuncthresh"
             } else {
@@ -5752,6 +5753,7 @@ eds. P. Jezzard, P.M. Matthews and S.M. Smith. OUP, 2001.<br>
         if { $fmri(thresh) == 2 } {
             set nResels [ expr int ( $fmri(VOLUME$rawstats) / $fmri(RESELS$rawstats) ) ]
             if { $nResels < 1 } { set nResels 1 }
+            # Threshold for the input image calculated from p-value
             set z_thresh [ fsl:exec "${FSLDIR}/bin/ptoz $fmri(prob_thresh) -g $nResels" ]
         }
 
