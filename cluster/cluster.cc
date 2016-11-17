@@ -578,7 +578,7 @@ int fmrib_main(int argc, char *argv[])
   vector<cluster<T> > clusters;
   vector<cluster<T> > clustersCope;
 
-
+  // Keep only significant clusters (cluster-wise thresholding only)
   for(unsigned int n=0;n<originalClusters.size();n++) {
     if (!( pthresh.set() && originalClusters[n].pval>pthresh.value() ) && !( sizethreshold.set() && originalClusters[n].size < sizethreshold.value() )) {
       clusters.push_back(originalClusters[n]);
