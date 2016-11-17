@@ -544,7 +544,7 @@ int fmrib_main(int argc, char *argv[])
 
   // Get p-value and log(pval) for all clusters/peaks
   int nozeroclust=0;
-  if (pthresh.set()) {
+  if (pthresh.set() || voxthresh.set() || voxuncthresh.set()) {
     if (verbose.value()) 
       cout<<"Re-thresholding with p-value"<<endl;
     Infer infer(dLh.value(), th, voxvol.value(), !voxthresh.set() || !voxuncthresh.set(), voxthresh.set());
