@@ -550,22 +550,22 @@ int fmrib_main(int argc, char *argv[])
     Infer infer(dLh.value(), th, voxvol.value(), !voxthresh.set() || !voxuncthresh.set(), voxthresh.set());
     if (voxthresh.unset() & voxuncthresh.unset()) {
       if (labelim.zsize()<=1) 
-	infer.setD(2); // the 2D option
+	      infer.setD(2); // the 2D option
       if (minclustersize.value()) {
-	float pmin=1.0;
-	unsigned int nmin=0;
-	while (pmin>=pthresh.value()) pmin=exp(infer(++nmin)); 
-	cout << "Minimum cluster size under p-threshold = " << nmin << endl;
+	      float pmin=1.0;
+	      unsigned int nmin=0;
+	      while (pmin>=pthresh.value()) pmin=exp(infer(++nmin)); 
+	      cout << "Minimum cluster size under p-threshold = " << nmin << endl;
       }
     }
     for (unsigned int n=0; n<originalClusters.size(); n++) {
       if (voxthresh.unset() & voxuncthresh.unset()) 
-	originalClusters[n].logpval = infer(originalClusters[n].size)/log(10);
+	      originalClusters[n].logpval = infer(originalClusters[n].size)/log(10);
       else
-	originalClusters[n].logpval = infer((float)originalClusters[n].maxval)/log(10);
+	      originalClusters[n].logpval = infer((float)originalClusters[n].maxval)/log(10);
       originalClusters[n].pval = exp(originalClusters[n].logpval*log(10));
       if (originalClusters[n].pval>pthresh.value()) 
-	nozeroclust++;
+	      nozeroclust++;
     }
   }
   if (verbose.value()) cout<<"Number of sub-p clusters = "<<nozeroclust<<endl;
