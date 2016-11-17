@@ -11,9 +11,8 @@ make
 #### Examples of usage for the updated `cluster` command
 ##### Voxel-wise corrected
 <pre>
-${FSLDIRUP}/src/cluster/cluster -i thresh_zstat1 -c stats/cope1 -t 2.3 -d 0.388188 --volume=45089 
---othresh=thresh_zstat1_2 -o cluster_mask_zstat1 --connectivity=26 --olmax=lmax_zstat1.txt --scalarname=Z 
--p 0.05 <b>--voxthresh</b>
+${FSLDIRUP}/src/cluster/cluster -i thresh_zstat1 -c stats/cope1 -t 14.5 -d 0.388188 --volume=45089 
+--othresh=thresh_zstat1_2 -o cluster_mask_zstat1 --connectivity=26 --olmax=lmax_zstat1.txt --scalarname=Z <b>--voxthresh</b>
 
 Cluster Index   Voxels  P   -log10(P)   Z-MAX   Z-MAX X (vox)   Z-MAX Y (vox)   Z-MAX Z (vox)   Z-COG X (vox)   
 Z-COG Y (vox)   Z-COG Z (vox)   COPE-MAX    COPE-MAX X (vox)    COPE-MAX Y (vox)    COPE-MAX Z (vox)    COPE-MEAN
@@ -24,8 +23,7 @@ Z-COG Y (vox)   Z-COG Z (vox)   COPE-MAX    COPE-MAX X (vox)    COPE-MAX Y (vox)
 ##### Voxel-wise uncorrected
 <pre>
 ${FSLDIRUP}/src/cluster/cluster -i thresh_zstat1 -c stats/cope1 -t 2.3 -d 0.388188 --volume=45089 
---othresh=thresh_zstat1_2 -o cluster_mask_zstat1 --connectivity=26 --olmax=lmax_zstat1.txt --scalarname=Z 
--p 0.05 <b>--voxuncthresh</b>
+--othresh=thresh_zstat1_2 -o cluster_mask_zstat1 --connectivity=26 --olmax=lmax_zstat1.txt --scalarname=Z <b>--voxuncthresh</b>
 
 Cluster Index	Voxels	P	-log10(P)	Z-MAX	Z-MAX X (vox)	Z-MAX Y (vox)	Z-MAX Z (vox)	Z-COG X (vox)	
 Z-COG Y (vox)	Z-COG Z (vox)	COPE-MAX	COPE-MAX X (vox)	COPE-MAX Y (vox)	COPE-MAX Z (vox)	COPE-MEAN
