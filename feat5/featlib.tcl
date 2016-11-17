@@ -5859,8 +5859,7 @@ if { $higherLevel == 0 && [ file exists reg/example_func2standard.mat ]} {
 			set z_thresh [ fsl:exec "${FSLDIR}/bin/ptoz $fmri(prob_thresh) -g $nResels" ]
 			set iscorrthresh  " --voxthresh"
 		} else {
-    		if { $fmri(thresh) == 1 } 
-    		{
+    		if { $fmri(thresh) == 1 } {
     			set z_thresh [ fsl:exec "${FSLDIR}/bin/ptoz $fmri(prob_thresh)" ]
 			    set iscorrthresh  " --voxuncthresh"
     		}			
