@@ -581,12 +581,12 @@ int fmrib_main(int argc, char *argv[])
 
   for(unsigned int n=0;n<originalClusters.size();n++) {
     if (!( pthresh.set() && originalClusters[n].pval>pthresh.value() ) && !( sizethreshold.set() && originalClusters[n].size < sizethreshold.value() )) {
-	clusters.push_back(originalClusters[n]);
-	if (copename.set()) 
-	  clustersCope.push_back(originalCopeClusters[n]);
+      clusters.push_back(originalClusters[n]);
+      if (copename.set()) 
+        clustersCope.push_back(originalCopeClusters[n]);
     }
   }
-     
+  
   sort(clusters.begin(),clusters.end());        
   sort(clustersCope.begin(),clustersCope.end());
 
