@@ -706,6 +706,15 @@ int main(int argc,char *argv[])
 	     << endl;
 	exit(EXIT_FAILURE);
       }
+
+    if ( (!pthresh.unset()) && (voxuncthresh.set() || voxthresh.set()) ) 
+      {
+  options.usage();
+  cerr << endl 
+       << "--pthresh CANNOT be set if --voxuncthresh or --voxthresh is used (please use --thresh instead)." 
+       << endl;
+  exit(EXIT_FAILURE);
+      }
     
     if ( ( !transformname.unset() && stdvolname.unset() ) ||
 	 ( transformname.unset() && (!stdvolname.unset()) ) ) 
