@@ -542,13 +542,15 @@ int fmrib_main(int argc, char *argv[])
     get_stats(labelim,cope,originalCopeClusters,minv.value());
   }
 
-  // Apply cluster-wise threshold (defined by p)
+  // Get p-value and log(pval) for all clusters/peaks
   int nozeroclust=0;
   if (pthresh.set()) {
     if (verbose.value()) 
       cout<<"Re-thresholding with p-value"<<endl;
     Infer infer(dLh.value(), th, voxvol.value(), !voxthresh.set() || !voxuncthresh.set(), voxthresh.set());
+
     if (voxthresh.unset() & voxuncthresh.unset()) {
+      // Get minimum cluster size corresponding to cluster-wise p threshold
       if (labelim.zsize()<=1) 
 	      infer.setD(2); // the 2D option
       if (minclustersize.value()) {
@@ -558,6 +560,8 @@ int fmrib_main(int argc, char *argv[])
 	      cout << "Minimum cluster size under p-threshold = " << nmin << endl;
       }
     }
+
+    // Calculate p-value and log(pval) for each cluster
     for (unsigned int n=0; n<originalClusters.size(); n++) {
       if (voxthresh.unset() & voxuncthresh.unset()) 
 	      originalClusters[n].logpval = infer(originalClusters[n].size)/log(10);
