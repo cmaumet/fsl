@@ -5844,9 +5844,15 @@ if { $higherLevel == 0 && [ file exists reg/example_func2standard.mat ]} {
 
 
 	if { $fmri(thresh) == 3 } {
+		# z_thresh is the cluster-forming threshold
     	set z_thresh    $fmri(z_thresh)
+    	# prob_thresh is the cluster-wise threshold (as a p-value)
+    	set prob_thresh $fmri(prob_thresh)
+    	set p_opt "-p $prob_thresh"
     	set iscorrthresh  ""
     } else {
+    	# Voxel-wise thresholds are specified with -t (no -p option)
+    	set p_opt ""
     	if { $fmri(thresh) == 2 } {
     		set nResels [ expr int ( $fmri(VOLUME$rawstats) / $fmri(RESELS$rawstats) ) ]
 			if { $nResels < 1 } { set nResels 1 }
@@ -5860,9 +5866,8 @@ if { $higherLevel == 0 && [ file exists reg/example_func2standard.mat ]} {
     		}			
 		}
     }
-    set prob_thresh $fmri(prob_thresh)
 
-    if { $fmri(analysis) == 0 } {
+    if { ($fmri(analysis) == 0) && ($fmri(thresh) == 3)} {
 	set z_thresh    [ exec sh -c " grep 'set fmri(z_thresh)'    design.fsf | awk '{ print \$3 }'" ]
 	set prob_thresh [ exec sh -c " grep 'set fmri(prob_thresh)' design.fsf | awk '{ print \$3 }'" ]
     }
@@ -5881,7 +5886,7 @@ if { $higherLevel == 0 && [ file exists reg/example_func2standard.mat ]} {
 	    set stdxfm "-x reg/example_func2highres.mat --warpvol=reg/highres2standard_warp"
 	}
 
-	fsl:exec "$FSLDIR/bin/cluster -i thresh_$rawstats ${COPE} -t $z_thresh  -p $prob_thresh -d $fmri(DLH$rawstats) --volume=$fmri(VOLUME$rawstats) $stdxfm --stdvol=reg/standard --mm --connectivity=[ feat5:connectivity thresh_$rawstats ] --olmax=lmax_${rawstats}_std.txt --scalarname=Z $iscorrthresh > cluster_${rawstats}_std.txt"
+	fsl:exec "$FSLDIR/bin/cluster -i thresh_$rawstats ${COPE} -t $z_thresh  $p_opt -d $fmri(DLH$rawstats) --volume=$fmri(VOLUME$rawstats) $stdxfm --stdvol=reg/standard --mm --connectivity=[ feat5:connectivity thresh_$rawstats ] --olmax=lmax_${rawstats}_std.txt --scalarname=Z $iscorrthresh > cluster_${rawstats}_std.txt"
 	fsl:exec "$FSLDIR/bin/cluster2html . cluster_${rawstats} -std"
     }
 }
