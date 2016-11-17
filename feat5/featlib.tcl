@@ -5740,21 +5740,23 @@ foreach rawstats $rawstatslist {
             if { $fmri(thresh) == 1 } {
                 set ps "$ps at P=$fmri(prob_thresh) (uncorrected)."
                 # Threshold for the input image calculated from p-value
-                set z_thresh [ fsl:exec "${FSLDIR}/bin/ptoz $fmri(prob_thresh)" ]
-                set iscorrthresh  " --voxuncthresh"
             } else {
                 set ps "$ps using GRF-theory-based maximum height thresholding with a (corrected) significance threshold of P=$fmri(prob_thresh) \[Worsley 2001]."
                 set rs "$rs\[Worsley 2001\] K.J. Worsley. Statistical analysis of activation images. Ch 14, in Functional MRI: An Introduction to Methods,
 eds. P. Jezzard, P.M. Matthews and S.M. Smith. OUP, 2001.<br>
 "
-                set iscorrthresh  " --voxthresh"
             }
+        }
+        if { $fmri(thresh) == 1 } {
+            set z_thresh [ fsl:exec "${FSLDIR}/bin/ptoz $fmri(prob_thresh)" ]
+            set iscorrthresh  " --voxuncthresh"
         }
         if { $fmri(thresh) == 2 } {
             set nResels [ expr int ( $fmri(VOLUME$rawstats) / $fmri(RESELS$rawstats) ) ]
             if { $nResels < 1 } { set nResels 1 }
             # Threshold for the input image calculated from p-value
             set z_thresh [ fsl:exec "${FSLDIR}/bin/ptoz $fmri(prob_thresh) -g $nResels" ]
+            set iscorrthresh  " --voxthresh"    
         }
 
         set COPE ""
