@@ -516,6 +516,10 @@ int fmrib_main(int argc, char *argv[])
     float frac = th;
     th = frac*(zvol.robustmax() - zvol.robustmin()) + zvol.robustmin();
   }
+
+  // Threshold the input volume using thresh value (--thresh option)
+  // For cluster-wise threshold this correspond to the cluster-forming 
+  // threshold. For voxel-wise threshold this is the only thresholding we need.
   mask = zvol;
   mask.binarise((T) th);
   if (minv.value()) { mask = ((T) 1) - mask; }
@@ -538,9 +542,7 @@ int fmrib_main(int argc, char *argv[])
     get_stats(labelim,cope,originalCopeClusters,minv.value());
   }
 
- 
-
-  // re-threshold for p
+  // Apply cluster-wise threshold (defined by p)
   int nozeroclust=0;
   if (pthresh.set()) {
     if (verbose.value()) 
