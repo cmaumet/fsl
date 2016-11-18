@@ -5722,11 +5722,13 @@ foreach rawstats $rawstatslist {
 	if { $fmri(thresh) == 1 } {
 	    set ps "$ps at P=$fmri(prob_thresh) (uncorrected)."
 	    set zthresh [ fsl:exec "${FSLDIR}/bin/ptoz $fmri(prob_thresh)" ]
+	    set iscorrthresh  " --voxuncthresh"
 	} else {
 	    set ps "$ps using GRF-theory-based maximum height thresholding with a (corrected) significance threshold of P=$fmri(prob_thresh) \[Worsley 2001]."
 	    set rs "$rs\[Worsley 2001\] K.J. Worsley. Statistical analysis of activation images. Ch 14, in Functional MRI: An Introduction to Methods,
 eds. P. Jezzard, P.M. Matthews and S.M. Smith. OUP, 2001.<br>
 "
+		set iscorrthresh  " --voxthresh"
 	}
     }
     if { $fmri(thresh) == 2 } {
@@ -5735,7 +5737,14 @@ eds. P. Jezzard, P.M. Matthews and S.M. Smith. OUP, 2001.<br>
 	set zthresh [ fsl:exec "${FSLDIR}/bin/ptoz $fmri(prob_thresh) -g $nResels" ]
     }
 
-    fsl:exec "$FSLDIR/bin/fslmaths thresh_$rawstats -thr $zthresh thresh_$rawstats"
+    set COPE ""
+	if { [ string first "zfstat" $rawstats ] < 0 && [ imtest stats/cope${i} ] } {
+	    set COPE "-c stats/cope$i"
+	}
+
+    fsl:exec "$FSLDIR/bin/cluster -i thresh_$rawstats $COPE -t $z_thresh -p $fmri(prob_thresh) -d $fmri(DLH$rawstats) --volume=$fmri(VOLUME$rawstats) --othresh=thresh_$rawstats -o cluster_mask_$rawstats --connectivity=[ feat5:connectivity thresh_$rawstats ] $VOXorMM --olmax=lmax_${rawstats}${STDEXT}.txt --scalarname=Z $iscorrthresh > cluster_${rawstats}${STDEXT}.txt"
+	fsl:exec "$FSLDIR/bin/cluster2html . cluster_$rawstats $STDOPT"
+
     } else {
     # cluster thresholding
 	if { $firsttime == 1 } {
@@ -5933,15 +5942,9 @@ $maskcomments
                 set firsttime 0
             }
 
-            if { $fmri(thresh) == 3 } {
             fsl:echo report_poststats.html "<p>$conname<br>
     <a href=\"cluster_${rawstats}${STDEXT}.html\"><IMG BORDER=0 SRC=\"rendered_thresh_${rawstats}.png\"></a>
     "
-            } else {
-            fsl:echo report_poststats.html "<p>$conname<br>
-    <IMG BORDER=0 SRC=\"rendered_thresh_${rawstats}.png\">
-    "
-           }
         }
     }
 

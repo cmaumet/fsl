@@ -113,6 +113,12 @@ Option<bool> no_table(string("--no_table"), false,
 Option<bool> minclustersize(string("--minclustersize"), false,
 		      string("prints out minimum significant cluster size"),
 		      false, no_argument);
+Option<bool> voxthresh(string("--voxthresh"), false, 
+         string("voxel-wise thresholding (corrected)"), 
+         false, no_argument);
+Option<bool> voxuncthresh(string("--voxuncthresh"), false, 
+         string("voxel-wise uncorrected thresholding"), 
+         false, no_argument);
 Option<int> voxvol(string("--volume"), 0,
 		   string("number of voxels in the mask"),
 		   false, requires_argument);
@@ -129,7 +135,7 @@ Option<float> thresh(string("-t,--thresh,--zthresh"), 2.3,
 		     string("threshold for input volume"),
 		     true, requires_argument);
 Option<float> pthresh(string("-p,--pthresh"), 0.01,
-		      string("p-threshold for clusters"),
+		      string("p-threshold"),
 		      false, requires_argument);
 Option<float> peakdist(string("--peakdist"), 0,
 		      string("minimum distance between local maxima/minima, in mm (default 0)"),
@@ -474,7 +480,7 @@ void print_results(const vector<int>& idx,
     }
   }
 
-  // output local maxima
+  // output local maxima (peak table)
   if (outlmax.set() || outlmaxim.set()) {
     string outlmaxfile="/dev/null";
     if (outlmax.set()) { outlmaxfile=outlmax.value(); }
@@ -625,23 +631,38 @@ int fmrib_main(int argc, char *argv[])
   int nozeroclust=0;
   if (!pthresh.unset()) {
     if (verbose.value()) 
-      cout<<"Re-thresholding with p-value"<<endl;
-    Infer infer(dLh.value(), th, voxvol.value());
+      cout<<"Re-thresholding with p-value"<<endl;    
+    // Build the cluster table
+    Infer infer(dLh.value(), th, voxvol.value(), !(voxthresh.set() || voxuncthresh.set()), voxthresh.set());
+
+    if (voxthresh.unset() & voxuncthresh.unset()) {
     if (labelim.zsize()<=1) 
       infer.setD(2); // the 2D option
     if (minclustersize.value()) {
       float pmin=1.0;
-      int nmin=0;
+        unsigned int nmin=0;
       while (pmin>=pthresh.value()) pmin=exp(infer(++nmin)); 
       cout << "Minimum cluster size under p-threshold = " << nmin << endl;
     }
+    } 
     for (int n=1; n<length; n++) {
-      int k = size[n];
-      logpvals[n] = infer(k)/log(10);
+      unsigned int k = size[n];
+      // Max value of the z-statistic within the cluster
+      float stat = maxvals[n]; 
+      if (voxthresh.unset() & voxuncthresh.unset()) {
+        // Given cluster size k, get cluster p-value
+        logpvals[n] = infer(k)/log(10);
+      } else if (voxthresh.set()) {
+        // Given z-stat get GRF corrected p-value
+        logpvals[n] = infer(stat)/log(10);
+      } else if (voxuncthresh.set())  {
+        // Given z-stat get uncorrected p-value
+        logpvals[n] = infer(stat)/log(10);
+      }
       pvals[n] = exp(logpvals[n]*log(10));
       if (pvals[n]>pthresh.value()) {
-	pthreshsize[n] = 0;
-	nozeroclust++;
+        pthreshsize[n] = 0;
+        nozeroclust++;
       }
     }
   }
@@ -739,6 +760,8 @@ int main(int argc,char *argv[])
     options.add(verbose);
     options.add(help);
     options.add(warpname);
+    options.add(voxthresh);
+    options.add(voxuncthresh);
     
     options.parse_command_line(argc, argv);
 
