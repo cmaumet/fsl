@@ -5827,16 +5827,16 @@ After all thresholding, $rawstats was masked with $themask.<br>"
     fsl:exec "/bin/mv -f conmask/* . ; rmdir conmask"
     # redo clustering
     if { $fmri(thresh) == 3 } {
-	foreach rawstats $rawstatslist {
-	    set i [ string trimleft $rawstats "abcdefghijklmnopqrstuvwxyz_" ]
-	    set COPE ""
-	    if { [ string first "zfstat" $rawstats ] < 0 && [ imtest stats/cope${i} ] } {
-		set COPE "-c stats/cope$i"
-	    }
-	    #Turn off p-threshold as not sensible when dealing with a masked stat
-	    fsl:exec "$FSLDIR/bin/cluster -i thresh_$rawstats $COPE -t $fmri(z_thresh) -d $fmri(DLH$rawstats) --volume=$fmri(VOLUME$rawstats) --othresh=thresh_$rawstats -o cluster_mask_$rawstats --connectivity=[ feat5:connectivity thresh_$rawstats ] $VOXorMM --olmax=lmax_${rawstats}${STDEXT}.txt --scalarname=Z > cluster_${rawstats}${STDEXT}.txt"
-	    fsl:exec "$FSLDIR/bin/cluster2html . cluster_$rawstats $STDOPT"
-	}
+        foreach rawstats $rawstatslist {
+            set i [ string trimleft $rawstats "abcdefghijklmnopqrstuvwxyz_" ]
+            set COPE ""
+            if { [ string first "zfstat" $rawstats ] < 0 && [ imtest stats/cope${i} ] } {
+                set COPE "-c stats/cope$i"
+            }
+            #Turn off p-threshold as not sensible when dealing with a masked stat
+            fsl:exec "$FSLDIR/bin/cluster -i thresh_$rawstats $COPE -t $fmri(z_thresh) -d $fmri(DLH$rawstats) --volume=$fmri(VOLUME$rawstats) --othresh=thresh_$rawstats -o cluster_mask_$rawstats --connectivity=[ feat5:connectivity thresh_$rawstats ] $VOXorMM --olmax=lmax_${rawstats}${STDEXT}.txt --scalarname=Z > cluster_${rawstats}${STDEXT}.txt"
+            fsl:exec "$FSLDIR/bin/cluster2html . cluster_$rawstats $STDOPT"
+        }
     }
 }
 
