@@ -1,8 +1,0 @@
-//! @brief brief description for member list
-//!
-//! Fuller description of this functions purpose
-//! 
-//! @param a description of parameter a
-//! @param b description of parameter b
-//!
-//! @return description of the return value

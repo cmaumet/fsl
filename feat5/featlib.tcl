@@ -66,7 +66,7 @@
 #   interested in using the Software commercially, please contact Isis
 #   Innovation Limited ("Isis"), the technology transfer company of the
 #   University, to negotiate a licence. Contact details are:
-#   innovation@isis.ox.ac.uk quoting reference DE/9564.
+#   Innovation@innovation.ox.ac.uk quoting reference DE/9564.
 
 #
 
@@ -179,6 +179,9 @@ set fmri(sh_yn) $fmri(sh_yn)
 
 # B0 fieldmap unwarping?
 set fmri(regunwarp_yn) $fmri(regunwarp_yn)
+
+# GDC Test
+set fmri(gdc) $fmri(gdc)
 
 # EPI dwell time (ms)
 set fmri(dwell) $fmri(dwell)
@@ -1232,6 +1235,14 @@ If this is not changed, the nonlinear registration will use brain-extracted imag
 	    if { ! [ file exists $feat_files($i) ] && ! [ imtest $feat_files($i) ] } {
 		set AllOK "${AllOK}
 Problem with FEAT input file ($i): currently set to \"$feat_files($i)\""
+	if { $w != -1 } {
+	    pack forget $fmri(dataf).datamain.nptsndelete.npts.npts1 $fmri(dataf).datamain.nptsndelete.npts.npts2 $fmri(dataf).datamain.trparadigm_hp.tr.tr1 $fmri(dataf).datamain.trparadigm_hp.tr.tr2 
+	    pack $fmri(dataf).datamain.nptsndelete.npts.npts1 -side left
+
+	    pack $fmri(dataf).datamain.trparadigm_hp.tr.tr1 -side left
+	}
+
+
 	    } else {
 		if { $fmri(level) == 1 && $fmri(inputtype) == 2 } {
 		    set feat_files($i) [ remove_ext $feat_files($i) ]
@@ -1996,7 +2007,6 @@ proc feat5:updatereg { w } {
 
 proc feat5:updateimageinfo { w i full } {
     global FSLDIR feat_files fmri
-
     set thefile [ remove_ext $feat_files($i) ]
 
     set changed_stuff 0
@@ -2014,12 +2024,21 @@ proc feat5:updateimageinfo { w i full } {
 	    set fmri(npts) $npts
 	}
 
+	if { $w != -1 } {
+	    pack forget $fmri(dataf).datamain.nptsndelete.npts.npts1 $fmri(dataf).datamain.nptsndelete.npts.npts2 $fmri(dataf).datamain.trparadigm_hp.tr.tr1 $fmri(dataf).datamain.trparadigm_hp.tr.tr2 
+	    pack $fmri(dataf).datamain.nptsndelete.npts.npts2 -in $fmri(dataf).datamain.nptsndelete.npts -side left
+	    pack $fmri(dataf).datamain.trparadigm_hp.tr.tr2 -side left
+	}
+
 	if { $full } {
 	    set tempTR [ exec sh -c "$FSLDIR/bin/fslval $thefile pixdim4" ]
-	    if { $tempTR != 0 && $tempTR != 1 } {
-		set fmri(tr) $tempTR
+	    if { $tempTR == 0 } {
+		MxPause "Input file has a TR of 0: This must be fixed in the header before analysis can take place."
 	    }
-
+	    if { $tempTR == 1 } {
+		MxPause "Input file has a TR of 1: If the data was generated with an older MRI sequence, this may be incorrect and need to be fixed in the header."
+	    }	 	   
+	    set fmri(tr) $tempTR
 	    # set BET and FLIRT DOF according to FOV
 	    set xfov [ expr abs([ exec sh -c "$FSLDIR/bin/fslval $thefile pixdim1" ] * [ exec sh -c "$FSLDIR/bin/fslval $thefile dim1" ]) ]
 	    set yfov [ expr abs([ exec sh -c "$FSLDIR/bin/fslval $thefile pixdim2" ] * [ exec sh -c "$FSLDIR/bin/fslval $thefile dim2" ]) ]
@@ -2051,8 +2070,10 @@ proc feat5:updateimageinfo { w i full } {
 		MxPause "Warning - have auto-set BET preprocessing option and/or registration DoF on the basis of image fields-of-view; check settings."
 	    }
 	}
+    } else {
+	    pack forget $fmri(dataf).datamain.nptsndelete.npts.npts1  $fmri(dataf).datamain.nptsndelete.npts.npts2 
+	    pack  $fmri(dataf).datamain.nptsndelete.npts.npts1 -in $fmri(dataf).datamain.nptsndelete.npts -side left
     }
-
     if { $fmri(level) > 1 && $fmri(analysis) != 4 } {
 	set fmri(npts) $fmri(multiple)
     }
@@ -4241,30 +4262,29 @@ frame $f.datamain.nptsndelete
 
 set fmri(npts) 0
 
-if { ! $fmri(inmelodic) } {
+labelframe $f.datamain.nptsndelete.npts -text "Total volumes " -labelanchor w -relief flat
+SpinBox $f.datamain.nptsndelete.npts.npts1 -textvariable fmri(npts) -range {0 2000000 1 }
+label $f.datamain.nptsndelete.npts.npts2   -textvariable fmri(npts)
 
-    LabelSpinBox $f.datamain.nptsndelete.npts -label "Total volumes " -textvariable fmri(npts) -range {0 2000000 1 }
+
+if { ! $fmri(inmelodic) } {
     balloonhelp_for $f.datamain.nptsndelete.npts "The number of FMRI volumes in the time series, including any initial
-volumes that you wish to delete. This will get set automatically once
+volumes that you wish to delete. This will be fixed automatically once
 valid input data has been selected.
 
 Alternatively you can set this number by hand before selecting data so
 that you can setup and view a model without having any data, for
 experimental planning purposes etc."
+pack $f.datamain.nptsndelete.npts.npts1 -in $f.datamain.nptsndelete.npts -side left
 
 } else {
-
-    frame $f.datamain.nptsndelete.npts
-    label $f.datamain.nptsndelete.npts.npts1 -text "Total volumes "
-    label $f.datamain.nptsndelete.npts.npts2 -textvariable fmri(npts)
     balloonhelp_for $f.datamain.nptsndelete.npts "The number of FMRI volumes in the time series, including any initial
 volumes that you wish to delete. This will get set automatically once
 valid input data has been selected."
-    pack $f.datamain.nptsndelete.npts.npts1 $f.datamain.nptsndelete.npts.npts2 -in $f.datamain.nptsndelete.npts -side left
+pack $f.datamain.nptsndelete.npts.npts2 -in $f.datamain.nptsndelete.npts -side left
 
 }
 
-#
 # ndelete
 
 LabelSpinBox $f.datamain.nptsndelete.ndelete -label "       Delete volumes " -textvariable fmri(ndelete) -range {0 200000 1 } -width 3 
@@ -4306,9 +4326,12 @@ pack $f.datamain.nptsndelete.npts $f.datamain.nptsndelete.ndelete -in $f.datamai
 frame $f.datamain.trparadigm_hp
 
 # TR
+labelframe $f.datamain.trparadigm_hp.tr -text "TR (s) " -labelanchor w -relief flat
+SpinBox $f.datamain.trparadigm_hp.tr.tr1 -textvariable fmri(tr) -range {0.0001 200000 0.25 }
+label $f.datamain.trparadigm_hp.tr.tr2  -textvariable fmri(tr)
+pack $f.datamain.trparadigm_hp.tr.tr1  -side left
 
-LabelSpinBox $f.datamain.trparadigm_hp.tr -label "TR (s) " -textvariable fmri(tr) -range {0.0001 200000 0.25 } 
-balloonhelp_for $f.datamain.trparadigm_hp.tr "The time (in seconds) between scanning successive FMRI volumes."
+balloonhelp_for $f.datamain.trparadigm_hp.tr "The time (in seconds) between scanning successive FMRI volumes. This will get set automatically once valid input data has been selected."
 
 #
 # High pass
@@ -5099,6 +5122,9 @@ set fugueOptions ""
     if { $fmri(regstandard_yn) } {
 	set flirtOptions "$flirtOptions -s \"$fmri(regstandard)\" -y $fmri(regstandard_dof) -z $fmri(regstandard_search)"
     }
+if { [ info exists fmri(gdc) ] && [ file exists $fmri(gdc) ] } {
+	set flirtOptions "$flirtOptions -G \"$fmri(gdc)\""
+    }
     if { $fmri(regunwarp_yn) } { #override highres DOF
         set fugueOptions "-a $unwarp_files($session) -b $unwarp_files_mag($session) -e $fmri(te) -f $fmri(signallossthresh) -g $fmri(dwell) -p $fmri(unwarp_dir) -w BBR"
     }
@@ -5214,25 +5240,14 @@ if { $fmri(regunwarp_yn) } {
 
     cd $FD
 
-    fsl:exec "${FSLDIR}/bin/applywarp -i reg/unwarp/FM_UD_fmap_mag_brain_mask -r example_func --rel --premat=reg/unwarp/FM_UD_fmap_mag_brain2str.mat --postmat=reg/highres2example_func.mat -o reg/unwarp/EF_UD_fmap_mag_brain_mask"
-
-# now either apply unwarping one vol at a time (including applying individual mcflirt transforms at same time),
-# or if mcflirt transforms don't exist, just apply warp to 4D $funcdata
-if { [ file exists mc/prefiltered_func_data_mcf.mat/MAT_0000 ] } {
-    fsl:exec "${FSLDIR}/bin/fslsplit $funcdata grot"
-    for { set i 0 } { $i < $total_volumes } { incr i 1 } {
-	set pad [format %04d $i]
-	fsl:exec "${FSLDIR}/bin/applywarp -i grot$pad -o grot$pad --premat=mc/prefiltered_func_data_mcf.mat/MAT_$pad -w reg/example_func2highres_warp.nii.gz -r example_func --rel --postmat=reg/highres2example_func.mat --interp=spline"
+    fsl:exec "${FSLDIR}/bin/applywarp -i reg/unwarp/FM_UD_fmap_mag_brain_mask -r example_func --rel --premat=reg/unwarp/FM_UD_fmap_mag_brain2str.mat --postmat=reg/highres2example_func.mat -o reg/unwarp/EF_UD_fmap_mag_brain_mask --paddingsize=1"
+    set prematCall ""
+    if { [ file exists mc/prefiltered_func_data_mcf.mat/MAT_0000 ] } {
+	fsl:exec "cat mc/prefiltered_func_data_mcf.mat/MAT* > mc/prefiltered_func_data_mcf.cat"
+	set prematCall "--premat=mc/prefiltered_func_data_mcf.cat"
     }
-    fsl:exec "${FSLDIR}/bin/fslmerge -t prefiltered_func_data_unwarp [ imglob grot* ]"
-    fsl:exec "/bin/rm -f grot*"
-} else {
-    fsl:exec "${FSLDIR}/bin/applywarp -i $funcdata -r example_func -o prefiltered_func_data_unwarp -w reg/example_func2highres_warp.nii.gz --postmat=reg/highres2example_func.mat --rel --interp=spline"
-}
-
-set funcdata prefiltered_func_data_unwarp
-
-#
+    fsl:exec "${FSLDIR}/bin/applywarp -i $funcdata $prematCall -r example_func -o prefiltered_func_data_unwarp -w reg/example_func2highres_warp.nii.gz --postmat=reg/highres2example_func.mat --rel --interp=spline --paddingsize=1"
+    set funcdata prefiltered_func_data_unwarp
 }
 
 #
@@ -5398,7 +5413,7 @@ if { $fmri(temphp_yn) || $fmri(templp_yn) } {
 set IMTR [ exec sh -c "$FSLDIR/bin/fslval filtered_func_data pixdim4" ]
 
 if { [ expr abs($IMTR - $fmri(tr)) ] > 0.01 } {
-    fsl:exec "${FSLDIR}/bin/fslhd -x filtered_func_data | sed 's/  dt = .*/  dt = '$fmri(tr)'/g' > tmpHeader"
+    fsl:exec "${FSLDIR}/bin/fslhd -x filtered_func_data | sed 's/  dt = .*/  dt = '\\''$fmri(tr)'\\''/g' > tmpHeader"
     fsl:exec "${FSLDIR}/bin/fslcreatehd tmpHeader filtered_func_data"
     fsl:exec "/bin/rm tmpHeader"
 }
@@ -5521,6 +5536,9 @@ proc feat5:proc_stats { session } {
     }
 
     # create confoundevs.txt file if asked for (either via confounds or via motion pars)
+    if { [ file exists confoundevs.txt ] } {
+	fsl:exec "rm confoundevs.txt"
+    }
     feat5:generateMotionEVs
     set confoundSourceList ""
     if { $fmri(motionevsbeta) != "" } {
@@ -5728,7 +5746,7 @@ foreach rawstats $rawstatslist {
 	    set rs "$rs\[Worsley 2001\] K.J. Worsley. Statistical analysis of activation images. Ch 14, in Functional MRI: An Introduction to Methods,
 eds. P. Jezzard, P.M. Matthews and S.M. Smith. OUP, 2001.<br>
 "
-		set iscorrthresh  " --voxthresh"
+	    set iscorrthresh  " --voxthresh"
 	}
     }
     if { $fmri(thresh) == 2 } {
@@ -5738,9 +5756,9 @@ eds. P. Jezzard, P.M. Matthews and S.M. Smith. OUP, 2001.<br>
     }
 
     set COPE ""
-	if { [ string first "zfstat" $rawstats ] < 0 && [ imtest stats/cope${i} ] } {
-	    set COPE "-c stats/cope$i"
-	}
+    if { [ string first "zfstat" $rawstats ] < 0 && [ imtest stats/cope${i} ] } {
+	set COPE "-c stats/cope$i"
+    }
 
     fsl:exec "$FSLDIR/bin/cluster -i thresh_$rawstats $COPE -t $z_thresh -p $fmri(prob_thresh) -d $fmri(DLH$rawstats) --volume=$fmri(VOLUME$rawstats) --othresh=thresh_$rawstats -o cluster_mask_$rawstats --connectivity=[ feat5:connectivity thresh_$rawstats ] $VOXorMM --olmax=lmax_${rawstats}${STDEXT}.txt --scalarname=Z $iscorrthresh > cluster_${rawstats}${STDEXT}.txt"
 	fsl:exec "$FSLDIR/bin/cluster2html . cluster_$rawstats $STDOPT"
@@ -6666,7 +6684,7 @@ if { $fmri(ostats) == 1 } {
 }
 
 if { $fmri(icaopt) == 2 } {
-    set thecommand "$thecommand -a concat"
+    set thecommand "$thecommand --sep_vn"
 } else {
     set thecommand "$thecommand -a tica"
 }
