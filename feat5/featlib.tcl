@@ -5798,6 +5798,8 @@ if { $fmri(conmask1_1) } {
 	    incr I $fmri(ncon_real)
 	}
 	set theinput thresh_$rawstats
+
+    # Apply contrast masking
 	for { set C 1 } { $C <= [ expr $fmri(ncon_real) + $fmri(nftests_real) ] } { incr C } {
 	    if { $C != $I } {
 		set F ""
@@ -5825,18 +5827,37 @@ After all thresholding, $rawstats was masked with $themask.<br>"
 	}
     }
     fsl:exec "/bin/mv -f conmask/* . ; rmdir conmask"
+
     # redo clustering
     if { $fmri(thresh) == 3 } {
-        foreach rawstats $rawstatslist {
-            set i [ string trimleft $rawstats "abcdefghijklmnopqrstuvwxyz_" ]
-            set COPE ""
-            if { [ string first "zfstat" $rawstats ] < 0 && [ imtest stats/cope${i} ] } {
-                set COPE "-c stats/cope$i"
+        set iscorrthresh  ""
+        # Note: z_thresh is not used for thresholding (as this is already done)
+        # but is needed to compute the p-values for each cluster in the table
+        set z_thresh    $fmri(z_thresh)
+    } else {
+        if { $fmri(thresh) == 1 } {
+            # Note: z_thresh is passed to the cluster command but not used as 
+            # the map has already been thresholded
+            set z_thresh [ fsl:exec "${FSLDIR}/bin/ptoz $fmri(prob_thresh)" ]
+            set iscorrthresh  " --voxuncthresh"
+        } else {
+            if { $fmri(thresh) == 2 } {
+                # Note: z_thresh is passed to the cluster command but not used as 
+                # the map has already been thresholded
+                set z_thresh [ fsl:exec "${FSLDIR}/bin/ptoz $fmri(prob_thresh) -g $nResels" ]
+                set iscorrthresh  " --voxthresh"
             }
-            #Turn off p-threshold as not sensible when dealing with a masked stat
-            fsl:exec "$FSLDIR/bin/cluster -i thresh_$rawstats $COPE -t $fmri(z_thresh) -d $fmri(DLH$rawstats) --volume=$fmri(VOLUME$rawstats) --othresh=thresh_$rawstats -o cluster_mask_$rawstats --connectivity=[ feat5:connectivity thresh_$rawstats ] $VOXorMM --olmax=lmax_${rawstats}${STDEXT}.txt --scalarname=Z > cluster_${rawstats}${STDEXT}.txt"
-            fsl:exec "$FSLDIR/bin/cluster2html . cluster_$rawstats $STDOPT"
         }
+    }
+    foreach rawstats $rawstatslist {
+        set i [ string trimleft $rawstats "abcdefghijklmnopqrstuvwxyz_" ]
+        set COPE ""
+        if { [ string first "zfstat" $rawstats ] < 0 && [ imtest stats/cope${i} ] } {
+            set COPE "-c stats/cope$i"
+        }
+        #Turn off p-threshold as not sensible when dealing with a masked stat
+        fsl:exec "$FSLDIR/bin/cluster -i thresh_$rawstats $COPE -t $z_thresh -d $fmri(DLH$rawstats) --volume=$fmri(VOLUME$rawstats) --othresh=thresh_$rawstats -o cluster_mask_$rawstats --connectivity=[ feat5:connectivity thresh_$rawstats ] $VOXorMM --olmax=lmax_${rawstats}${STDEXT}.txt --scalarname=Z $iscorrthresh > cluster_${rawstats}${STDEXT}.txt"
+        fsl:exec "$FSLDIR/bin/cluster2html . cluster_$rawstats $STDOPT"
     }
 }
 
