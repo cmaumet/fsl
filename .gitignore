@@ -77,7 +77,6 @@ basisfield/
 baycest/
 bet2/
 bint/
-cluster/Makefile
 cluster/branchname.log
 cluster/cluster2html
 cluster/connectedcomp.cc
