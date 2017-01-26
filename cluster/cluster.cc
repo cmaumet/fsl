@@ -417,7 +417,7 @@ void print_results(vector<cluster<T> >& clusters,
   string units(mm.value() ? " (mm)" : " (vox)");
   string tablehead;
   tablehead = "Cluster Index\tVoxels";
-  if (pthresh.set()) tablehead += "\tP\t-log10(P)";
+  if (pthresh.set() || voxthresh.set() || voxuncthresh.set()) tablehead += "\tP\t-log10(P)";
   string z=scalarname.value()+"-";
   if (z=="-") { z=""; }
   tablehead += "\t"+z+"MAX\t"+z+"MAX X" + units + "\t"+z+"MAX Y" + units + "\t"+z+"MAX Z" + units
@@ -430,7 +430,7 @@ void print_results(vector<cluster<T> >& clusters,
   if (!no_table.value()) cout << tablehead << endl;
   for (int n=clusters.size()-1; n>=0 && !no_table.value(); n--) {
       cout << setprecision(3) << num(n+1) << "\t" << clusters[n].size << "\t"; 
-      if (!pthresh.unset()) { cout << num(clusters[n].pval) << "\t" << num(-clusters[n].logpval) << "\t"; }
+      if (pthresh.set() || voxthresh.set() || voxuncthresh.set()) { cout << num(clusters[n].pval) << "\t" << num(-clusters[n].logpval) << "\t"; }
         cout << num(clusters[n].maxval) << "\t" 
 	   << num(clusters[n].maxpos.x) << "\t" << num(clusters[n].maxpos.y) << "\t" 
 	   << num(clusters[n].maxpos.z) << "\t"
@@ -516,6 +516,10 @@ int fmrib_main(int argc, char *argv[])
     float frac = th;
     th = frac*(zvol.robustmax() - zvol.robustmin()) + zvol.robustmin();
   }
+
+  // Threshold the input volume using thresh value (--thresh option)
+  // For cluster-wise threshold this correspond to the cluster-forming 
+  // threshold. For voxel-wise threshold this is the only thresholding we need.
   mask = zvol;
   mask.binarise((T) th);
   if (minv.value()) { mask = ((T) 1) - mask; }
@@ -538,32 +542,35 @@ int fmrib_main(int argc, char *argv[])
     get_stats(labelim,cope,originalCopeClusters,minv.value());
   }
 
- 
-
-  // re-threshold for p
+  // Get p-value and log(pval) for all clusters/peaks
   int nozeroclust=0;
-  if (pthresh.set()) {
+  if (pthresh.set() || voxthresh.set() || voxuncthresh.set()) {
+
     if (verbose.value()) 
       cout<<"Re-thresholding with p-value"<<endl;
     Infer infer(dLh.value(), th, voxvol.value(), !voxthresh.set() || !voxuncthresh.set(), voxthresh.set());
+
     if (voxthresh.unset() & voxuncthresh.unset()) {
+      // Get minimum cluster size corresponding to cluster-wise p threshold
       if (labelim.zsize()<=1) 
-	infer.setD(2); // the 2D option
+	      infer.setD(2); // the 2D option
       if (minclustersize.value()) {
-	float pmin=1.0;
-	unsigned int nmin=0;
-	while (pmin>=pthresh.value()) pmin=exp(infer(++nmin)); 
-	cout << "Minimum cluster size under p-threshold = " << nmin << endl;
+	      float pmin=1.0;
+	      unsigned int nmin=0;
+	      while (pmin>=pthresh.value()) pmin=exp(infer(++nmin)); 
+	      cout << "Minimum cluster size under p-threshold = " << nmin << endl;
       }
     }
+
+    // Calculate p-value and log(pval) for each cluster
     for (unsigned int n=0; n<originalClusters.size(); n++) {
       if (voxthresh.unset() & voxuncthresh.unset()) 
-	originalClusters[n].logpval = infer(originalClusters[n].size)/log(10);
+	      originalClusters[n].logpval = infer(originalClusters[n].size)/log(10);
       else
-	originalClusters[n].logpval = infer((float)originalClusters[n].maxval)/log(10);
+	      originalClusters[n].logpval = infer((float)originalClusters[n].maxval)/log(10);
       originalClusters[n].pval = exp(originalClusters[n].logpval*log(10));
       if (originalClusters[n].pval>pthresh.value()) 
-	nozeroclust++;
+	      nozeroclust++;
     }
   }
   if (verbose.value()) cout<<"Number of sub-p clusters = "<<nozeroclust<<endl;
@@ -572,15 +579,15 @@ int fmrib_main(int argc, char *argv[])
   vector<cluster<T> > clusters;
   vector<cluster<T> > clustersCope;
 
-
+  // Keep only significant clusters (cluster-wise thresholding only)
   for(unsigned int n=0;n<originalClusters.size();n++) {
     if (!( pthresh.set() && originalClusters[n].pval>pthresh.value() ) && !( sizethreshold.set() && originalClusters[n].size < sizethreshold.value() )) {
-	clusters.push_back(originalClusters[n]);
-	if (copename.set()) 
-	  clustersCope.push_back(originalCopeClusters[n]);
+      clusters.push_back(originalClusters[n]);
+      if (copename.set()) 
+        clustersCope.push_back(originalCopeClusters[n]);
     }
   }
-     
+  
   sort(clusters.begin(),clusters.end());        
   sort(clustersCope.begin(),clustersCope.end());
 
@@ -703,6 +710,15 @@ int main(int argc,char *argv[])
 	     << "Both --dlh and --volume MUST be set if --pthresh is used." 
 	     << endl;
 	exit(EXIT_FAILURE);
+      }
+
+    if ( (!pthresh.unset()) && (voxuncthresh.set() || voxthresh.set()) ) 
+      {
+  options.usage();
+  cerr << endl 
+       << "--pthresh CANNOT be set if --voxuncthresh or --voxthresh is used (please use --thresh instead)." 
+       << endl;
+  exit(EXIT_FAILURE);
       }
     
     if ( ( !transformname.unset() && stdvolname.unset() ) ||
