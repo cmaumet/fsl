@@ -64,7 +64,7 @@
     interested in using the Software commercially, please contact Isis
     Innovation Limited ("Isis"), the technology transfer company of the
     University, to negotiate a licence. Contact details are:
-    Innovation@innovation.ox.ac.uk quoting reference DE/9564. */
+    innovation@isis.ox.ac.uk quoting reference DE/9564. */
 
 #include <iostream>
 #include <cstdlib>
@@ -81,59 +81,44 @@
 #endif
 
 using namespace std;
-// constructor for FWE-corrected cluster/voxel statistic
-Infer::Infer(float udLh, float ut, unsigned int uV, bool clusterthresh=true, bool corrthresh=true) {
-  this->corrthresh = corrthresh;
-  this->clusterthresh = clusterthresh;
- 
-  if (clusterthresh) {
-    // the following bounds are checked to ensure that the exponent
-    //  does not underflow, which is assumed to occur for results
-    //  of less than 1e-37  => abs(t)<13.0
 
-    // assign to copies
-    dLh = udLh;
-    t = ut;
-    V = uV;
-    if (V<=0.0) V=1.0;
-    // dimensionality
-    D = 3.0;
-    // if (zsize <= 1)  D = 2.0;  // to be done by calling program
+Infer::Infer(float udLh, float ut, unsigned int uV) {
+  // the following bounds are checked to ensure that the exponent
+  //  does not underflow, which is assumed to occur for results
+  //  of less than 1e-37  => abs(t)<13.0
 
-    // NB: the (sqr(t) -1) is previous D=3 version (from where??)
-    if (fabs(t)<13.0) {
-      Em_ = V * pow(double(2*M_PI),double(-(D+1)/2)) * dLh * pow((MISCMATHS::Sqr(t) - 1), (D-1)/2) *
-	exp(-MISCMATHS::Sqr(t)/2.0); 
-    } else {
-      Em_ = 0.0;  // underflowed exp()
-    }
-    
-    if (fabs(t)<8.0) {
-      B_ = pow((MISCMATHS::gamma(1.0+D/2.0)*Em_)/(V*(0.5 + 0.5*MISCMATHS::erf(-t/sqrt(2.0)))),(2.0/D));
-    } else {
-      // the large t approximation  (see appendix below)
-      float a1 = V * dLh * pow(double(2*M_PI),double(-(D+1)/2));
-      float a3 = pow((MISCMATHS::gamma(1+D/2.0)  / V ),(2.0/D));
-      float tsq = t*t;
-      float c = pow(2*M_PI,-1.0/2.0) * t / ( 1.0 - 1.0/tsq + 3.0/(tsq*tsq)) ;
-      float Em_q = a1 * pow(double(tsq - 1.0),double(D-1)/2) * c;
-      B_ = a3 * pow(double(Em_q),double(2.0/D));
-    }
+  // assign to copies
+  dLh = udLh;
+  t = ut;
+  V = uV;
+  if (V<=0.0) V=1.0;
+  // dimensionality
+  D = 3.0;
+  // if (zsize <= 1)  D = 2.0;  // to be done by calling program
 
-    
+  // NB: the (sqr(t) -1) is previous D=3 version (from where??)
+  if (fabs(t)<13.0) {
+    Em_ = V * pow(double(2*M_PI),double(-(D+1)/2)) * dLh * pow((MISCMATHS::Sqr(t) - 1), (D-1)/2) *
+      exp(-MISCMATHS::Sqr(t)/2.0); 
+  } else {
+    Em_ = 0.0;  // underflowed exp()
+  }
+
+  if (fabs(t)<8.0) {
+    B_ = pow((MISCMATHS::gamma(1.0+D/2.0)*Em_)/(V*(0.5 + 0.5*MISCMATHS::erf(-t/sqrt(2.0)))),(2.0/D));
+  } else {
+    // the large t approximation  (see appendix below)
+    float a1 = V * dLh * pow(double(2*M_PI),double(-(D+1)/2));
+    float a3 = pow((MISCMATHS::gamma(1+D/2.0)  / V ),(2.0/D));
+    float tsq = t*t;
+    float c = pow(2*M_PI,-1.0/2.0) * t / ( 1.0 - 1.0/tsq + 3.0/(tsq*tsq)) ;
+    float Em_q = a1 * pow(double(tsq - 1.0),double(D-1)/2) * c;
+    B_ = a3 * pow(double(Em_q),double(2.0/D));
+  }
+  
+
 //      cout << "E{m} " << Em_ << endl;
 //      cout << "Beta = " << B_ << endl;
-  } else if (corrthresh) {
-    // Voxel-wise corrected threshold
-    dLh = udLh;
-    V = uV;
-    if (V<=0.0) V=1.0;
-    // dimensionality
-    D = 3.0;
-  } else {
-    // Voxel-wise uncorrected threshold
-    // Only need the z-stat (passed as argument to the operator)
-  }
 }
   
 //////////////////////////////////////////////////////////////////////////////
@@ -141,7 +126,6 @@ Infer::Infer(float udLh, float ut, unsigned int uV, bool clusterthresh=true, boo
 // Calculate and return log(p)
 
 float Infer::operator() (unsigned int k) {
-  if (clusterthresh){
   // ideally returns the following:
   //    return 1 - exp(-Em_ * exp(-B_ * pow( k , 2.0 / D)));
   // but in practice must be careful about ranges
@@ -168,37 +152,9 @@ float Infer::operator() (unsigned int k) {
   }
   cerr << "Warning: could not compute p-value accurately." << endl;
   return -500;
-  } else {  
-    return operator()((float) k);
-}
 }
 
-//////////////////////////////////////////////////////////////////////////////
 
-// Calculate and return log(p) for voxel statistic
-float Infer::operator()(float z) {
-  // ideally returns the following:
-  //    return Em_;
-  double p;
-
-  if (corrthresh){
-    // Corrected threshold z to p conversion
-
-    // NB: the (sqr(t) -1) is previous D=3 version (from where??)
-    if (fabs(z)<13.0) {
-      Em_ = V * pow(double(2*M_PI),double(-(D+1)/2)) * dLh * pow((MISCMATHS::Sqr(z) - 1), (D-1)/2) *
-        exp(-MISCMATHS::Sqr(z)/2.0); 
-    } else {
-      Em_ = 0.0;  // underflowed exp()
-    }
-    return log(Em_);
-  } else {
-    // Uncorrected threshold z to p conversion
-    p = 1-0.5*(1+erf(z/(1*sqrt(2))));
-    return log(p);
-  }
-  
-}
 
 // MATHEMATICAL APPENDIX
 

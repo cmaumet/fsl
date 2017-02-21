@@ -64,25 +64,22 @@
     interested in using the Software commercially, please contact Isis
     Innovation Limited ("Isis"), the technology transfer company of the
     University, to negotiate a licence. Contact details are:
-    Innovation@innovation.ox.ac.uk quoting reference DE/9564. */
+    innovation@isis.ox.ac.uk quoting reference DE/9564. */
 
 #if !defined(Infer_h)
 #define Infer_h
 
-// $Id: infer.h,v 1.8 2016/10/13 15:04:31 mwebster Exp $
+// $Id: infer.h,v 1.7 2004/09/17 16:01:57 steve Exp $
 
 class Infer {
 public:
-  Infer(float dLh, float t, unsigned int V, bool clusterthresh, bool corrthresh);
-
+  Infer(float dLh, float t, unsigned int V);
   void setD(int NumDim) { D = (float) NumDim; }
 
-  float operator()(unsigned int k);   // returns log(p) of cluster stat
-  float operator()(float z);   // returns log(p) of voxel stat
+  float operator() (unsigned int k);   // returns log(p)
 
 private:
   float Em_, B_, dLh, t, V, D;
-  bool clusterthresh, corrthresh;
 };
 
 #endif
