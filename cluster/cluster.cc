@@ -454,7 +454,12 @@ void print_results(vector<cluster<T> >& clusters,
       cerr << "Could not open file " << outlmax.value() << " for writing" << endl;
     string scalarnm=scalarname.value();
     if (scalarnm=="") { scalarnm="Value"; }
-    lmaxfile << "Cluster Index\t"+scalarnm+"\tx\ty\tz\t" << endl;
+    string p_header="";
+    if (voxthresh.set() || voxuncthresh.set()){
+        p_header = "\tP\t-log10(P)\t";
+    }
+
+    lmaxfile << "Cluster Index\t"+scalarnm+p_header+"\tx\ty\tz\t" << endl;
     volume<char> lmaxvol;
     copyconvert(zvol,lmaxvol);
     lmaxvol=0;
@@ -489,19 +494,30 @@ void print_results(vector<cluster<T> >& clusters,
 	if ( doAffineTransform || doWarpfieldTransform ) TransformToReference((*point).second,trans,zvol,stdvol,full_field,doAffineTransform,doWarpfieldTransform);
 	MultiplyCoordinateVector((*point).second, toDisplayCoord);
 
-        if (voxthresh.set() || voxuncthresh.set()){
-               double p_corr;
-               // Voxel-wise threshold
-               p_corr = ztop_function(0, voxthresh.set(), (*point).first, 3000);
-               // ztop(int twotailed, int grf, double p, double z, double nresels)
+       
+       int twotailed = 0;
+       double nresels =  voxvol.value() * dLh.value() / pow(4*log(2),double(3/2));
 
-	       lmaxfile << setprecision(3) << n+1 << "\t" << (*point).first << "\t" << 
-	               (*point).second.x << "\t" << (*point).second.y << "\t" << (*point).second.z << endl;
-       } else {
+        if (voxthresh.set() || voxuncthresh.set()){
+                int grf;
+                if (voxthresh.set()){
+                        // FWE-corrected Voxel-wise threshold
+                        grf = 1;
+                } else{
+                        grf = 0;
+                }
+               double p_vox;
+               
+               p_vox = ztop_function(twotailed, grf, (*point).first, nresels);
+
+               lmaxfile << setprecision(3) << n+1 << "\t" << (*point).first << "\t" << 
+                        p_vox << "\t" << -log10(p_vox) << "\t" <<
+                       (*point).second.x << "\t" << (*point).second.y << "\t" << (*point).second.z << endl;
+        } else {
                 // Cluster-wise threshold
                lmaxfile << setprecision(3) << n+1 << "\t" << (*point).first << "\t" << 
                        (*point).second.x << "\t" << (*point).second.y << "\t" << (*point).second.z << endl;
-       }
+        }
       }
     }
     lmaxfile.close();
