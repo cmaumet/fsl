@@ -135,6 +135,9 @@ Option<int> mx_cnt(string("-n,--num"), 6,
 Option<float> dLh(string("-d,--dlh"), 4.0,
 		  string("smoothness estimate = sqrt(det(Lambda))"),
 		  false, requires_argument);
+Option<float> resels(string("-r,--resels"), -1,
+      string("Size of one resel in voxel units"),
+      false, requires_argument);
 Option<float> thresh(string("-t,--thresh,--zthresh"), 2.3,
 		     string("threshold for input volume"),
 		     true, requires_argument);
@@ -496,7 +499,7 @@ void print_results(vector<cluster<T> >& clusters,
 
        
        int twotailed = 0;
-       double nresels =  voxvol.value() * dLh.value() / pow(4*log(2),double(3/2));
+       double nresels =  voxvol.value() / resels.value();
 
         if (voxthresh.set() || voxuncthresh.set()){
                 int grf;
