@@ -66,16 +66,7 @@
     University, to negotiate a licence. Contact details are:
     innovation@isis.ox.ac.uk quoting reference DE/9564. */
 
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <cmath>
-#include "libprob.h"
-#include <algorithm>
-
-#define MINP 1e-15
-using namespace std;
-using namespace MISCMATHS;
+#include <ztop_function.h>
 
 /* }}} */
 /* {{{ usage */
@@ -92,6 +83,7 @@ void usage(void)
 
 int main(int argc,char *argv[])
 {
+
   int i, twotailed=0, grf=0;
   double p, z, nresels=0;
 
@@ -124,22 +116,7 @@ for (i=2; i<argc; i++)
 
 /* }}} */
 
-  if (twotailed)
-    z=fabs(z);
-
-  if (grf) {
-    if (z<2)
-      p=1; /* Below z of 2 E(EC) becomes non-monotonic */
-    else
-      p = nresels * 0.11694 * exp(-0.5*z*z)*(z*z-1);  /* 0.11694 = (4ln2)^1.5 / (2pi)^2 */
-  }  else {
-    p=1-ndtr(z);
-  }
-
-  if (twotailed)
-    p*=2;
-
-  p=min(p,1.0);
+  p = ztop_function(twotailed, grf, z, nresels);
 
   if (p>0.0001) 
     printf("%f\n",p);
