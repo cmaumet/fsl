@@ -459,7 +459,7 @@ void print_results(vector<cluster<T> >& clusters,
     if (scalarnm=="") { scalarnm="Value"; }
     string p_header="";
     if (voxthresh.set() || voxuncthresh.set()){
-        p_header = "\tP\t-log10(P)\t";
+        p_header = "\tP\t-log10(P)";
     }
 
     lmaxfile << "Cluster Index\t"+scalarnm+p_header+"\tx\ty\tz\t" << endl;
