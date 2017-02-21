@@ -79,6 +79,7 @@
 #include "infer.h"
 #include "warpfns/warpfns.h"
 #include "warpfns/fnirt_file_reader.h"
+#include "../misc_c/ztop_function.h"
 
 #define _GNU_SOURCE 1
 #define POSIX_SOURCE 1        
@@ -487,8 +488,20 @@ void print_results(vector<cluster<T> >& clusters,
 		MISCMATHS::round((*point).second.z))=1;
 	if ( doAffineTransform || doWarpfieldTransform ) TransformToReference((*point).second,trans,zvol,stdvol,full_field,doAffineTransform,doWarpfieldTransform);
 	MultiplyCoordinateVector((*point).second, toDisplayCoord);
-	lmaxfile << setprecision(3) << n+1 << "\t" << (*point).first << "\t" << 
-	  (*point).second.x << "\t" << (*point).second.y << "\t" << (*point).second.z << endl;
+
+        if (voxthresh.set() || voxuncthresh.set()){
+               double p_corr;
+               // Voxel-wise threshold
+               p_corr = ztop_function(0, voxthresh.set(), (*point).first, 3000);
+               // ztop(int twotailed, int grf, double p, double z, double nresels)
+
+	       lmaxfile << setprecision(3) << n+1 << "\t" << (*point).first << "\t" << 
+	               (*point).second.x << "\t" << (*point).second.y << "\t" << (*point).second.z << endl;
+       } else {
+                // Cluster-wise threshold
+               lmaxfile << setprecision(3) << n+1 << "\t" << (*point).first << "\t" << 
+                       (*point).second.x << "\t" << (*point).second.y << "\t" << (*point).second.z << endl;
+       }
       }
     }
     lmaxfile.close();
