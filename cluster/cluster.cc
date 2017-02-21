@@ -709,6 +709,7 @@ int main(int argc,char *argv[])
     options.add(copename);
     options.add(voxvol);
     options.add(dLh);
+    options.add(resels);
     options.add(fractional);
     options.add(numconnected);
     options.add(mm);
