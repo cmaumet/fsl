@@ -1,6 +1,3 @@
-# fsl
-FSL extension for voxel-wise thresholding
-
 -----
 
 ### Important note
@@ -9,6 +6,8 @@ FSL extension for voxel-wise thresholding
 
 -----
 
+# fsl
+FSL extension for voxel-wise thresholding
 
 #### Make
 ```
