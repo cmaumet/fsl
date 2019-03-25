@@ -1,6 +1,15 @@
 # fsl
 FSL extension for voxel-wise thresholding
 
+-----
+
+### Important note
+
+**Please note that this extension for voxel-wise thresholding is now natively part of FSL (as of version 5.0.10). This repository is therefore no longer maintained.** 
+
+-----
+
+
 #### Make
 ```
 FSLDIRUP=/usr/local/fsl_MODIFIED
